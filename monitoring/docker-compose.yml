@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Метрики и алерты
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command: --config.file=/etc/prometheus/prometheus.yml
+
+  # Дашборды
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana-dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+  # Логи
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+
+  # Трассировка LLM
+  langfuse:
+    image: langfuse/langfuse:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/langfuse
+      - NEXTAUTH_SECRET=secret
+      - SALT=secret
+    depends_on:
+      - db
+
+  # БД для Langfuse
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langfuse
