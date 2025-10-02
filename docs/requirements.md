@@ -97,7 +97,7 @@ AI Review Analyzer — интеллектуальная система для а
 
 **Масштабируемость:** возможность горизонтального масштабирования Backend API, NLP и LLM сервисов.
 # 5. Технологический стек
-**Frontend:** JavaScript + Bootstrap
+**Frontend:** React
 
 **Backend:** Python/FastAPI + Celery + Redis 
 
