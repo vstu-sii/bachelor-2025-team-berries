@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build and deploy
+      run: |
+        docker build -t myapp/backend:latest ./backend
+        docker build -t myapp/frontend:latest ./frontend
+        echo "Деплой на сервер..."
+        # Здесь команды для деплоя на ваш сервер
