@@ -24,6 +24,8 @@ tags:
     description: Работа с проектами и историей анализов
   - name: User
     description: Управление профилем пользователя
+  - name: Reviews
+    description: Работа с отзывами
 
 paths:
   # ==================== АУТЕНТИФИКАЦИЯ ====================
@@ -38,6 +40,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              valid_request:
+                summary: Валидные данные регистрации
+                value:
+                  email: "user@example.com"
+                  password: "SecurePass123!"
+                  confirmPassword: "SecurePass123!"
       responses:
         '201':
           description: Успешная регистрация
@@ -45,18 +54,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  summary: Успешная регистрация
+                  value:
+                    success: true
+                    message: "Регистрация завершена. Проверьте email для подтверждения."
+                    data:
+                      userId: "550e8400-e29b-41d4-a716-446655440000"
         '400':
           description: Ошибка валидации
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Ошибка валидации
+                  value:
+                    success: false
+                    error: "validation_error"
+                    message: "Пароль должен содержать минимум 8 символов, включая заглавные и строчные буквы, цифры и специальные символы"
+                    details:
+                      - field: "password"
+                        message: "Пароль слишком простой"
         '409':
           description: Email уже занят
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                email_exists:
+                  summary: Email уже зарегистрирован
+                  value:
+                    success: false
+                    error: "email_exists"
+                    message: "Пользователь с таким email уже зарегистрирован"
 
   /auth/login:
     post:
@@ -69,6 +103,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
+            examples:
+              valid_credentials:
+                summary: Валидные учетные данные
+                value:
+                  email: "user@example.com"
+                  password: "SecurePass123!"
       responses:
         '200':
           description: Успешный вход
@@ -76,12 +116,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+              examples:
+                success:
+                  summary: Успешная аутентификация
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    expiresIn: 3600
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "user@example.com"
+                      emailVerified: true
+                      createdAt: "2025-01-15T10:30:00Z"
+                      lastLoginAt: "2025-01-19T14:20:00Z"
         '401':
           description: Неверные учетные данные
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_credentials:
+                  summary: Неверный email или пароль
+                  value:
+                    success: false
+                    error: "invalid_credentials"
+                    message: "Неверный email или пароль"
+
+  /auth/verify-email:
+    post:
+      tags: [Authentication]
+      summary: Подтверждение email
+      description: Подтверждение email адреса с помощью токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  example: "abc123def456"
+      responses:
+        '200':
+          description: Email подтвержден
+        '400':
+          description: Неверный или просроченный токен
 
   /auth/refresh:
     post:
@@ -94,10 +176,14 @@ paths:
           application/json:
             schema:
               type: object
+              required: [refreshToken]
               properties:
                 refreshToken:
                   type: string
-              required: [refreshToken]
+              examples:
+                refresh_request:
+                  value:
+                    refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
           description: Токен обновлен
@@ -110,6 +196,25 @@ paths:
                     type: string
                   expiresIn:
                     type: integer
+              examples:
+                success:
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    expiresIn: 3600
+        '401':
+          description: Неверный refresh token
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Выход из системы
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+        '401':
+          description: Не авторизован
 
   # ==================== АНАЛИЗ ТОВАРОВ ====================
   /analysis/start:
@@ -125,6 +230,16 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AnalysisStartRequest'
+            examples:
+              wildberries_analysis:
+                summary: Анализ товара с Wildberries
+                value:
+                  productUrl: "https://www.wildberries.ru/catalog/12345678/detail.aspx"
+                  marketplace: "wildberries"
+                  options:
+                    maxReviews: 500
+                    analyzeAspects: true
+                    generateCharts: true
       responses:
         '202':
           description: Анализ принят в обработку
@@ -132,8 +247,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalysisStartResponse'
+              examples:
+                accepted:
+                  value:
+                    analysisId: "550e8400-e29b-41d4-a716-446655440000"
+                    status: "pending"
+                    estimatedTime: 120
+                    message: "Анализ начат, ожидайте завершения"
         '400':
           description: Неверная ссылка или параметры
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_url:
+                  value:
+                    success: false
+                    error: "invalid_url"
+                    message: "Неподдерживаемый маркетплейс или неверный формат ссылки"
         '429':
           description: Превышен лимит запросов
           headers:
@@ -149,6 +281,16 @@ paths:
               description: Время сброса лимита (Unix timestamp)
               schema:
                 type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limit:
+                  value:
+                    success: false
+                    error: "rate_limit_exceeded"
+                    message: "Слишком много запросов. Попробуйте через 15 минут."
 
   /analysis/{analysisId}/status:
     get:
@@ -162,6 +304,7 @@ paths:
           schema:
             type: string
             format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
       security:
         - BearerAuth: []
       responses:
@@ -171,6 +314,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalysisStatusResponse'
+              examples:
+                in_progress:
+                  value:
+                    analysisId: "550e8400-e29b-41d4-a716-446655440000"
+                    status: "analyzing"
+                    progress: 75
+                    currentStep: "Анализ тональности отзывов"
+                    startedAt: "2025-01-19T14:20:00Z"
+                    estimatedCompletion: "2025-01-19T14:22:00Z"
+        '404':
+          description: Анализ не найден
 
   /analysis/{analysisId}/results:
     get:
@@ -193,6 +347,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalysisResultsResponse'
+              examples:
+                completed_analysis:
+                  value:
+                    analysisId: "550e8400-e29b-41d4-a716-446655440000"
+                    status: "completed"
+                    summary:
+                      totalReviews: 347
+                      positiveReviews: 245
+                      negativeReviews: 67
+                      neutralReviews: 35
+                      averageRating: 4.2
+                      analysisDuration: 45
+                    charts:
+                      sentimentDistribution:
+                        type: "pie"
+                        data:
+                          - sentiment: "positive"
+                            count: 245
+                            percentage: 70.6
+                          - sentiment: "negative"
+                            count: 67
+                            percentage: 19.3
+                          - sentiment: "neutral"
+                            count: 35
+                            percentage: 10.1
+                    aspects:
+                      - aspect: "качество"
+                        mentionCount: 156
+                        positiveMentions: 120
+                        negativeMentions: 25
+                        neutralMentions: 11
+                      - aspect: "доставка"
+                        mentionCount: 89
+                        positiveMentions: 45
+                        negativeMentions: 40
+                        neutralMentions: 4
+                    topReviews:
+                      mostPositive:
+                        - id: "rev-001"
+                          text: "Отличный товар, превзошел ожидания!"
+                          rating: 5
+                          author: "Анна"
+                          date: "2025-01-15T10:30:00Z"
+                          sentiment: "positive"
+                      mostNegative:
+                        - id: "rev-002"
+                          text: "Товар пришел поврежденным"
+                          rating: 1
+                          author: "Иван"
+                          date: "2025-01-14T16:45:00Z"
+                          sentiment: "negative"
+                    generatedAt: "2025-01-19T14:22:00Z"
         '404':
           description: Анализ не найден
 
@@ -242,6 +448,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectsListResponse'
+              examples:
+                projects_list:
+                  value:
+                    projects:
+                      - id: "550e8400-e29b-41d4-a716-446655440000"
+                        productName: "Смартфон XYZ"
+                        productUrl: "https://www.wildberries.ru/catalog/12345678/detail.aspx"
+                        marketplace: "wildberries"
+                        status: "completed"
+                        totalReviews: 347
+                        averageRating: 4.2
+                        sentiment: "positive"
+                        createdAt: "2025-01-19T14:20:00Z"
+                        completedAt: "2025-01-19T14:22:00Z"
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 45
+                      totalPages: 3
+                      hasNext: true
+                      hasPrev: false
 
   /projects/{projectId}:
     get:
@@ -264,6 +491,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectDetailResponse'
+        '404':
+          description: Проект не найден
 
   /projects/search:
     get:
@@ -297,6 +526,62 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ProjectSummary'
+                  total:
+                    type: integer
+
+  # ==================== ОТЗЫВЫ ====================
+  /projects/{projectId}/reviews:
+    get:
+      tags: [Reviews]
+      summary: Список отзывов проекта
+      description: Получение всех отзывов по конкретному проекту
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sentiment
+          in: query
+          schema:
+            type: string
+            enum: [positive, negative, neutral]
+        - name: rating
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список отзывов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReviewDetail'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
 
   # ==================== ПОЛЬЗОВАТЕЛЬ ====================
   /user/profile:
@@ -313,6 +598,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
+              examples:
+                user_profile:
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    email: "user@example.com"
+                    emailVerified: true
+                    createdAt: "2025-01-15T10:30:00Z"
+                    lastLoginAt: "2025-01-19T14:20:00Z"
+                    quota:
+                      monthlyLimit: 100
+                      usedThisMonth: 45
+                      resetsAt: "2025-02-01T00:00:00Z"
+
+  /user/profile:
+    put:
+      tags: [User]
+      summary: Обновление профиля
+      description: Обновление информации профиля пользователя
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              examples:
+                update_email:
+                  value:
+                    email: "newemail@example.com"
+      responses:
+        '200':
+          description: Профиль обновлен
+        '400':
+          description: Ошибка валидации
+        '409':
+          description: Email уже занят
 
 components:
   securitySchemes:
@@ -437,6 +763,9 @@ components:
         estimatedCompletion:
           type: string
           format: date-time
+        errorMessage:
+          type: string
+          description: Сообщение об ошибке, если статус failed
 
     AnalysisResultsResponse:
       type: object
@@ -532,6 +861,10 @@ components:
           type: integer
         neutralMentions:
           type: integer
+        sentimentScore:
+          type: number
+          format: float
+          description: Общая оценка тональности аспекта от -1 до 1
 
     TopReviews:
       type: object
@@ -566,6 +899,21 @@ components:
         sentiment:
           type: string
           enum: [positive, negative, neutral]
+        helpfulCount:
+          type: integer
+
+    ReviewDetail:
+      allOf:
+        - $ref: '#/components/schemas/Review'
+        - type: object
+          properties:
+            aspects:
+              type: array
+              items:
+                type: string
+            projectId:
+              type: string
+              format: uuid
 
     # ==================== ПРОЕКТЫ ====================
     ProjectsListResponse:
@@ -692,30 +1040,107 @@ components:
                 type: string
               message:
                 type: string
+        code:
+          type: string
+          description: Код ошибки для машинной обработки
 
-# ==================== RATE LIMITING ====================
+  # ==================== ВАЛИДАЦИЯ И RATE LIMITING ====================
+  parameters:
+    RateLimitHeaders:
+      in: header
+      name: X-RateLimit
+      schema:
+        type: object
+        properties:
+          Limit:
+            type: integer
+          Remaining:
+            type: integer
+          Reset:
+            type: integer
+
+  responses:
+    TooManyRequests:
+      description: Слишком много запросов
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+# ==================== RATE LIMITING КОНФИГУРАЦИЯ ====================
 x-rate-limit:
   default:
     requests: 1000
     period: 3600
+    burst: 50
   authentication:
     register:
       requests: 5
       period: 3600
+      burst: 2
     login:
       requests: 10
       period: 3600
+      burst: 5
+    verify-email:
+      requests: 3
+      period: 3600
+      burst: 1
   analysis:
     start:
       requests: 50
       period: 3600
+      burst: 10
     status:
       requests: 300
       period: 3600
+      burst: 50
+    results:
+      requests: 200
+      period: 3600
+      burst: 30
   projects:
     list:
       requests: 200
       period: 3600
+      burst: 40
     search:
       requests: 100
       period: 3600
+      burst: 20
+    details:
+      requests: 300
+      period: 3600
+      burst: 50
+  user:
+    profile:
+      requests: 100
+      period: 3600
+      burst: 20
+
+# ==================== ВАЛИДАЦИЯ ДАННЫХ ====================
+x-validation:
+  email:
+    pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    maxLength: 255
+  password:
+    minLength: 8
+    maxLength: 100
+    pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]"
+  url:
+    patterns:
+      wildberries: "^https://www\\.wildberries\\.ru/catalog/\\d+/detail\\.aspx"
+      ozon: "^https://www\\.ozon\\.ru/product/.*"
+      yandex_market: "^https://market\\.yandex\\.ru/product/.*"
+  uuid:
+    pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
