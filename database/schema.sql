@@ -84,3 +84,43 @@ CREATE TABLE user_sessions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Индексы для оптимизации производительности
+
+-- Пользователи
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_created_at ON users(created_at);
+CREATE INDEX idx_users_email_verified ON users(email_verified) WHERE email_verified = true;
+
+-- Проекты
+CREATE INDEX idx_projects_user_id ON projects(user_id);
+CREATE INDEX idx_projects_created_at ON projects(created_at);
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_projects_marketplace ON projects(marketplace_type);
+CREATE INDEX idx_projects_user_created ON projects(user_id, created_at DESC);
+
+-- Отзывы
+CREATE INDEX idx_reviews_project_id ON reviews(project_id);
+CREATE INDEX idx_reviews_sentiment ON reviews(sentiment);
+CREATE INDEX idx_reviews_rating ON reviews(rating);
+CREATE INDEX idx_reviews_date ON reviews(review_date);
+CREATE INDEX idx_reviews_project_sentiment ON reviews(project_id, sentiment);
+
+-- Результаты анализа
+CREATE INDEX idx_analysis_results_project ON analysis_results(project_id);
+CREATE INDEX idx_analysis_results_generated ON analysis_results(generated_at);
+
+-- LLM взаимодействия
+CREATE INDEX idx_llm_project_id ON llm_interactions(project_id);
+CREATE INDEX idx_llm_prompt_type ON llm_interactions(prompt_type);
+CREATE INDEX idx_llm_created_at ON llm_interactions(created_at);
+CREATE INDEX idx_llm_project_type ON llm_interactions(project_id, prompt_type);
+
+-- Сессии пользователей
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
+CREATE INDEX idx_user_sessions_token ON user_sessions(token_hash);
+
+-- Частичные индексы для оптимизации
+CREATE INDEX idx_projects_active ON projects(user_id, created_at DESC) WHERE status IN ('completed', 'analyzing');
+CREATE INDEX idx_reviews_helpful ON reviews(project_id, helpful_count DESC) WHERE helpful_count > 0;
