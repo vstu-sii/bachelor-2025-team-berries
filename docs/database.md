@@ -60,14 +60,5 @@
 - **Частичные индексы** для активных данных
 - **Каскадное удаление** для целостности
 
-## Миграции и версионирование
+<img width="1471" height="855" alt="image" src="https://github.com/user-attachments/assets/3a2e3e94-1f3d-4e51-8109-24adff123633" />
 
-### Рекомендуемые миграции:
-```sql
--- Добавление новых маркетплейсов
-ALTER TABLE projects 
-ADD CONSTRAINT valid_marketplace 
-CHECK (marketplace_type IN ('wildberries', 'ozon', 'yandex_market', 'new_marketplace'));
-
--- Добавление квот пользователей
-ALTER TABLE users ADD COLUMN monthly_quota INTEGER DEFAULT 50;
