@@ -1,1 +1,721 @@
+openapi: 3.0.3
+info:
+  title: Review Analyzer API
+  description: API системы анализа отзывов с маркетплейсов
+  version: 1.0.0
+  contact:
+    name: AlexandraR
+    email: support@review-analyzer.com
+  license:
+    name: Proprietary
 
+servers:
+  - url: https://api.review-analyzer.com/v1
+    description: Production server
+  - url: https://staging-api.review-analyzer.com/v1
+    description: Staging server
+
+tags:
+  - name: Authentication
+    description: Регистрация, вход и управление доступом
+  - name: Analysis
+    description: Управление анализами товаров
+  - name: Projects
+    description: Работа с проектами и историей анализов
+  - name: User
+    description: Управление профилем пользователя
+
+paths:
+  # ==================== АУТЕНТИФИКАЦИЯ ====================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Регистрация нового пользователя
+      description: Создание учетной записи с отправкой email для подтверждения
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email уже занят
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Вход в систему
+      description: Аутентификация пользователя и получение токенов
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Обновление access token
+      description: Получение нового access token с помощью refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+              required: [refreshToken]
+      responses:
+        '200':
+          description: Токен обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+
+  # ==================== АНАЛИЗ ТОВАРОВ ====================
+  /analysis/start:
+    post:
+      tags: [Analysis]
+      summary: Запуск анализа товара
+      description: Запуск процесса сбора и анализа отзывов по ссылке на товар
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisStartRequest'
+      responses:
+        '202':
+          description: Анализ принят в обработку
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisStartResponse'
+        '400':
+          description: Неверная ссылка или параметры
+        '429':
+          description: Превышен лимит запросов
+          headers:
+            X-RateLimit-Limit:
+              description: Лимит запросов в час
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Оставшееся количество запросов
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              description: Время сброса лимита (Unix timestamp)
+              schema:
+                type: integer
+
+  /analysis/{analysisId}/status:
+    get:
+      tags: [Analysis]
+      summary: Статус анализа
+      description: Получение текущего статуса выполнения анализа
+      parameters:
+        - name: analysisId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Статус анализа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisStatusResponse'
+
+  /analysis/{analysisId}/results:
+    get:
+      tags: [Analysis]
+      summary: Результаты анализа
+      description: Получение детальных результатов анализа
+      parameters:
+        - name: analysisId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Результаты анализа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResultsResponse'
+        '404':
+          description: Анализ не найден
+
+  # ==================== ПРОЕКТЫ И ИСТОРИЯ ====================
+  /projects:
+    get:
+      tags: [Projects]
+      summary: Список проектов пользователя
+      description: Получение списка всех анализов пользователя с пагинацией
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [createdAt, productName, status]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, parsing, analyzing, completed, failed]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список проектов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsListResponse'
+
+  /projects/{projectId}:
+    get:
+      tags: [Projects]
+      summary: Детали проекта
+      description: Получение детальной информации о проекте
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Детали проекта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetailResponse'
+
+  /projects/search:
+    get:
+      tags: [Projects]
+      summary: Поиск по проектам
+      description: Поиск проектов по названию товара или артикулу
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - name: marketplace
+          in: query
+          schema:
+            type: string
+            enum: [wildberries, ozon, yandex_market]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Результаты поиска
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectSummary'
+
+  # ==================== ПОЛЬЗОВАТЕЛЬ ====================
+  /user/profile:
+    get:
+      tags: [User]
+      summary: Профиль пользователя
+      description: Получение информации о текущем пользователе
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==================== АУТЕНТИФИКАЦИЯ ====================
+    RegisterRequest:
+      type: object
+      required: [email, password, confirmPassword]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: user@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]'
+          example: SecurePass123!
+        confirmPassword:
+          type: string
+          example: SecurePass123!
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: SecurePass123!
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: Refresh token для получения нового access token
+        expiresIn:
+          type: integer
+          description: Время жизни токена в секундах
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    # ==================== АНАЛИЗ ====================
+    AnalysisStartRequest:
+      type: object
+      required: [productUrl, marketplace]
+      properties:
+        productUrl:
+          type: string
+          format: uri
+          maxLength: 1000
+          example: https://www.wildberries.ru/catalog/12345678/detail.aspx
+        marketplace:
+          type: string
+          enum: [wildberries, ozon, yandex_market]
+          example: wildberries
+        options:
+          type: object
+          properties:
+            maxReviews:
+              type: integer
+              minimum: 1
+              maximum: 2000
+              default: 500
+            analyzeAspects:
+              type: boolean
+              default: true
+            generateCharts:
+              type: boolean
+              default: true
+
+    AnalysisStartResponse:
+      type: object
+      properties:
+        analysisId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, parsing, analyzing]
+        estimatedTime:
+          type: integer
+          description: Примерное время выполнения в секундах
+        message:
+          type: string
+          example: Анализ начат, ожидайте завершения
+
+    AnalysisStatusResponse:
+      type: object
+      properties:
+        analysisId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, parsing, analyzing, completed, failed]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Процент выполнения
+        currentStep:
+          type: string
+          example: Анализ тональности отзывов
+        startedAt:
+          type: string
+          format: date-time
+        estimatedCompletion:
+          type: string
+          format: date-time
+
+    AnalysisResultsResponse:
+      type: object
+      properties:
+        analysisId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed]
+        summary:
+          $ref: '#/components/schemas/AnalysisSummary'
+        charts:
+          $ref: '#/components/schemas/ChartsData'
+        aspects:
+          type: array
+          items:
+            $ref: '#/components/schemas/AspectAnalysis'
+        topReviews:
+          $ref: '#/components/schemas/TopReviews'
+        generatedAt:
+          type: string
+          format: date-time
+
+    AnalysisSummary:
+      type: object
+      properties:
+        totalReviews:
+          type: integer
+        positiveReviews:
+          type: integer
+        negativeReviews:
+          type: integer
+        neutralReviews:
+          type: integer
+        averageRating:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 5
+        analysisDuration:
+          type: integer
+          description: Время анализа в секундах
+
+    ChartsData:
+      type: object
+      properties:
+        sentimentDistribution:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [pie]
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  sentiment:
+                    type: string
+                  count:
+                    type: integer
+                  percentage:
+                    type: number
+        ratingOverTime:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [line]
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  averageRating:
+                    type: number
+
+    AspectAnalysis:
+      type: object
+      properties:
+        aspect:
+          type: string
+          example: качество
+        mentionCount:
+          type: integer
+        positiveMentions:
+          type: integer
+        negativeMentions:
+          type: integer
+        neutralMentions:
+          type: integer
+
+    TopReviews:
+      type: object
+      properties:
+        mostPositive:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        mostNegative:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        mostHelpful:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        rating:
+          type: integer
+        author:
+          type: string
+        date:
+          type: string
+          format: date-time
+        sentiment:
+          type: string
+          enum: [positive, negative, neutral]
+
+    # ==================== ПРОЕКТЫ ====================
+    ProjectsListResponse:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ProjectSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        productUrl:
+          type: string
+        marketplace:
+          type: string
+        status:
+          type: string
+        totalReviews:
+          type: integer
+        averageRating:
+          type: number
+        sentiment:
+          type: string
+          enum: [positive, negative, neutral, mixed]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    ProjectDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ProjectSummary'
+        - type: object
+          properties:
+            analysisResults:
+              $ref: '#/components/schemas/AnalysisResultsResponse'
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    # ==================== ПОЛЬЗОВАТЕЛЬ ====================
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        emailVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time
+        quota:
+          type: object
+          properties:
+            monthlyLimit:
+              type: integer
+            usedThisMonth:
+              type: integer
+            resetsAt:
+              type: string
+              format: date-time
+
+    # ==================== ОБЩИЕ СХЕМЫ ====================
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: validation_error
+        message:
+          type: string
+          example: Неверный формат email
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+# ==================== RATE LIMITING ====================
+x-rate-limit:
+  default:
+    requests: 1000
+    period: 3600
+  authentication:
+    register:
+      requests: 5
+      period: 3600
+    login:
+      requests: 10
+      period: 3600
+  analysis:
+    start:
+      requests: 50
+      period: 3600
+    status:
+      requests: 300
+      period: 3600
+  projects:
+    list:
+      requests: 200
+      period: 3600
+    search:
+      requests: 100
+      period: 3600
