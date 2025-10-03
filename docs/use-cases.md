@@ -103,56 +103,36 @@
 
 - ## 6. Use-case UML Диаграмма
 
+# Use Case Diagram: Анализ отзывов по ссылке на товар
+
+```mermaid
 sequenceDiagram
-    participant Пользователь
+    participant User as Пользователь
     participant Frontend as Frontend (UI)
     participant Backend as Backend System
     participant Parser as Парсер маркетплейса
     participant ML as ML Анализатор
     participant DB as База данных
 
-    Пользователь->>Frontend: 1. Нажимает "Проанализировать по ссылке"
+    Note over User,DB: Основной успешный сценарий
+    User->>Frontend: 1. Нажимает "Проанализировать по ссылке"
     Frontend->>Frontend: 2. Открывает форму ввода URL
     
-    Пользователь->>Frontend: 3. Вставляет ссылку на товар
+    User->>Frontend: 3. Вставляет ссылку на товар
     Frontend->>Frontend: 4. Валидация URL в реальном времени
-    Frontend-->>Пользователь: ✓ Подтверждение корректности URL
+    Frontend-->>User: ✓ Подтверждение корректности URL
     
-    Пользователь->>Frontend: 5. Нажимает "Начать анализ"
+    User->>Frontend: 5. Нажимает "Начать анализ"
     Frontend->>Frontend: 6. Показ индикатора прогресса
     
     Frontend->>Backend: 7. POST /api/analyze {url: "https://..."}
     
     Backend->>Backend: 8. Проверка лимитов запросов
-    alt Превышен лимит запросов
-        Backend-->>Frontend: 429 Too Many Requests
-        Frontend-->>Пользователь: "Слишком много запросов. Попробуйте через X минут"
-    end
     
     Backend->>Parser: 9. Запуск парсера маркетплейса
     Parser->>Parser: 10. Парсинг страницы товара
-    
-    alt Маркетплейс недоступен/изменена структура
-        Parser-->>Backend: Ошибка 503/404
-        Backend-->>Frontend: 503 Service Unavailable
-        Frontend-->>Пользователь: "Временно не удается получить данные..."
-    end
-    
     Parser->>Parser: 11. Извлечение отзывов
-    
-    alt Отзывы не найдены
-        Parser-->>Backend: Пустой список отзывов
-        Backend-->>Frontend: 200 OK {empty: true}
-        Frontend-->>Пользователь: "На данном товаре отзывов не найдено"
-    end
-    
     Parser-->>Backend: 12. Список отзывов
-    
-    alt Большое количество отзывов (>1000)
-        Backend-->>Frontend: 202 Accepted
-        Frontend-->>Пользователь: "Анализ запущен в фоне. Уведомим по готовности"
-        Backend->>Backend: Фоновая обработка
-    end
     
     Backend->>ML: 13. Анализ тональности и аспектов
     ML->>ML: 14. Определение тональности
@@ -164,9 +144,8 @@ sequenceDiagram
     
     Backend-->>Frontend: 18. 200 OK + данные отчета
     Frontend->>Frontend: 19. Скрытие индикатора загрузки
-    Frontend-->>Пользователь: 20. Показ дашборда с аналитикой
-    
-    Note over Frontend,Пользователь: Отчет включает:<br/>- Сводку (кол-во отзывов, тональность)<br/>- Графики распределения<br/>- Таблицу аспектов<br/>- Примеры отзывов
+    Frontend-->>User: 20. Показ дашборда с аналитикой
+```
 
 
 
