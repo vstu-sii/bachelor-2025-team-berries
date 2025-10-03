@@ -87,6 +87,136 @@
 
 ## 6. Use-case UML Диаграмма
 
+# Use Case: Регистрация и вход в систему - Sequence Diagram
+
+## Диаграмма последовательности
+
+```mermaid
+sequenceDiagram
+    participant User as Пользователь
+    participant Frontend as Frontend (UI)
+    participant Backend as Backend System
+    participant DB as База данных
+    participant EmailService as Email Сервис
+    participant AuthService as Auth Сервис
+
+    Note over User,AuthService: Сценарий регистрации нового пользователя
+    
+    User->>Frontend: 1. Нажимает "Регистрация"
+    Frontend-->>User: 2. Открывает форму регистрации
+    
+    User->>Frontend: 3. Заполняет email, пароль, подтверждение
+    Frontend->>Frontend: 4. Валидация в реальном времени
+    Frontend-->>User: ✓ Подтверждение валидности данных
+    
+    User->>Frontend: 5. Нажимает "Зарегистрироваться"
+    Frontend->>Frontend: 6. Показ индикатора загрузки
+    Frontend->>Backend: 7. POST /api/auth/register {email, password}
+    
+    Backend->>DB: 8. Проверка уникальности email
+    alt Email уже занят
+        DB-->>Backend: Ошибка - email существует
+        Backend-->>Frontend: 409 Conflict
+        Frontend-->>User: "Email уже занят. Войдите или восстановите пароль"
+    end
+    
+    DB-->>Backend: Email свободен
+    Backend->>AuthService: 9. Хеширование пароля
+    Backend->>DB: 10. Создание записи пользователя + verification token
+    Backend->>EmailService: 11. Отправка письма подтверждения
+    
+    alt Проблемы с email сервисом
+        EmailService-->>Backend: Ошибка отправки
+        Backend-->>Frontend: 503 Service Unavailable
+        Frontend-->>User: "Сервис временно недоступен. Попробуйте позже"
+    end
+    
+    EmailService-->>Backend: Письмо отправлено
+    Backend-->>Frontend: 201 Created
+    Frontend-->>User: 12. "Регистрация успешна! Проверьте email для подтверждения"
+
+    Note over User,AuthService: Сценарий входа существующего пользователя
+    
+    User->>Frontend: 13. Нажимает "Войти"
+    Frontend-->>User: 14. Открывает форму входа
+    
+    User->>Frontend: 15. Вводит email и пароль
+    Frontend->>Frontend: 16. Валидация формата email
+    User->>Frontend: 17. Нажимает "Войти"
+    
+    Frontend->>Backend: 18. POST /api/auth/login {email, password}
+    Backend->>DB: 19. Поиск пользователя по email
+    
+    alt Пользователь не найден
+        DB-->>Backend: Ошибка - пользователь не существует
+        Backend-->>Frontend: 401 Unauthorized
+        Frontend-->>User: "Неверный email или пароль"
+    end
+    
+    DB-->>Backend: Пользователь найден
+    Backend->>AuthService: 20. Проверка хеша пароля
+    
+    alt Неверный пароль
+        AuthService-->>Backend: Ошибка - пароль не совпадает
+        Backend-->>Frontend: 401 Unauthorized
+        Frontend-->>User: "Неверный email или пароль" + кнопка "Восстановить пароль"
+    end
+    
+    AuthService-->>Backend: Пароль верный
+    Backend->>AuthService: 21. Генерация JWT токена
+    Backend->>DB: 22. Создание сессии
+    Backend-->>Frontend: 200 OK + JWT токен
+    Frontend->>Frontend: 23. Сохранение токена
+    Frontend-->>User: 24. Перенаправление в личный кабинет
+
+    Note over User,AuthService: Обработка ошибок валидации
+    
+    alt Слабый пароль при регистрации
+        Frontend->>Frontend: Валидация пароля: 8+ символов, буквы, цифры
+        Frontend-->>User: "Пароль слишком простой" + требования
+    end
+    
+    alt Неверный формат email
+        Frontend->>Frontend: Валидация формата email
+        Frontend-->>User: "Неверный формат email"
+    end
+
+    Note over User,AuthService: Системные ошибки
+    
+    alt База данных недоступна
+        DB-->>Backend: Ошибка соединения
+        Backend-->>Frontend: 500 Internal Server Error
+        Frontend-->>User: "Системная ошибка. Попробуйте позже"
+    end
+```
+
+## Описание процесса
+
+### Сценарий регистрации:
+1. **Пользователь** заполняет форму регистрации
+2. **Система** проверяет уникальность email и сложность пароля
+3. **Создается** учетная запись с хешированием пароля
+4. **Отправляется** письмо подтверждения на email
+5. **Пользователь** получает уведомление об успешной регистрации
+
+### Сценарий входа:
+1. **Пользователь** вводит email и пароль
+2. **Система** проверяет существование пользователя и сверяет пароль
+3. **Генерируется** JWT токен для сессии
+4. **Пользователь** перенаправляется в личный кабинет
+
+### Обработка ошибок:
+- **Неверные учетные данные** - защита от подбора
+- **Занятый email** - предложение войти или восстановить пароль
+- **Слабый пароль** - требования к сложности
+- **Системные ошибки** - проблемы с БД или email сервисом
+
+### Особенности безопасности:
+- Хеширование паролей
+- JWT токены для сессий
+- Email подтверждение
+- Защита от brute-force атак
+
 
  
    
