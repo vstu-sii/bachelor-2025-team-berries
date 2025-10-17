@@ -70,30 +70,3 @@
 | 3 | ... | Система обрабатывает ошибку и показывает сообщение: "Регистрация отменена. Для использования системы требуется войти через Telegram." |
 | 4 | ... | Система возвращает пользователя на главную страницу |
 
-```mermaid
-useCaseGraph
-    title Use Case Diagram: Регистрация через Telegram
-    
-    actor Пользователь as "Пользователь"
-    actor Telegram as "Telegram Auth System"
-    actor DB as "База данных"
-    
-    rectangle Система {
-        usecase UC1 as "Регистрация через Telegram"
-        
-        usecase UC1_1 as "Happy Path"
-        usecase UC1_2 as "Пользователь уже существует"
-        usecase UC1_3 as "Telegram Widget недоступен"
-        usecase UC1_4 as "Отмена авторизации"
-        
-        UC1 --> UC1_1
-        UC1 --> UC1_2
-        UC1 --> UC1_3
-        UC1 --> UC1_4
-    }
-    
-    Пользователь --> UC1
-    Telegram -- UC1
-    DB -- UC1
-```
-
