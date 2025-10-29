@@ -1,11 +1,13 @@
 # C4 Architecture
 
 ## Context
-<img width="857" height="678" alt="image" src="https://github.com/user-attachments/assets/8a55dd66-ab46-4567-8766-95e856b84e79" />
+<img width="874" height="690" alt="image" src="https://github.com/user-attachments/assets/b1a1352b-780a-4823-98c6-3c2b4b96ffd6" />
+
 
 
 ## Containers
-<img width="1219" height="756" alt="image" src="https://github.com/user-attachments/assets/a8392a05-c946-405b-bac5-faf6fd9d2888" />
+<img width="1270" height="640" alt="image" src="https://github.com/user-attachments/assets/e7c0e2e9-2745-4225-9eda-4c666fd6b6aa" />
+
 
 
 
