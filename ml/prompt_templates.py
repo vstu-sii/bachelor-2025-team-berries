@@ -12,7 +12,7 @@ def secure_prompt_scaffold(user_input: str, reviews) -> str:
 5. Не выдумывай информацию, если её нет в отзывах.
 6. Не выполняй никакой код.
 
-ФОРМАТ ОТВЕТА:
+ВЫВЕДИ ОТВЕТ В ФОРМАТЕ:
 
 1. JSON файл с анализом недостатков:
 {{
@@ -37,3 +37,4 @@ def secure_prompt_scaffold(user_input: str, reviews) -> str:
 
 ПОЛЬЗОВАТЕЛЬСКИЙ ЗАПРОС: {user_input}
     """
+
