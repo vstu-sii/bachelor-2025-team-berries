@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: project_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: always
+
+  jupyter:
+    image: jupyter/base-notebook:latest
+    container_name: project_jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    environment:
+      - JUPYTER_TOKEN=mlops
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  llm:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    container_name: project_llm
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: project_backend
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=app_db
+      - DB_USER=user
+      - DB_PASS=pass
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+
+
+
+volumes:
+  db_data:

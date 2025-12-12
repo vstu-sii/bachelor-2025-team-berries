@@ -1,0 +1,132 @@
+version: "3.8"
+
+services:
+  # --- Prometheus ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
+    networks:
+      - monitoring
+
+  # --- Grafana ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - monitoring
+
+  # --- Loki (логирование) ---
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+
+  # --- Promtail (агент логов) ---
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - ./promtail.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring
+
+  # --- ClickHouse ---
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # TCP
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # --- Postgres для Langfuse ---
+  langfuse-db:
+    image: postgres:15
+    container_name: langfuse_db
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: langfuse
+    ports:
+      - "5433:5432"
+    volumes:
+      - langfuse_db_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+      - backend_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+
+  # --- Langfuse ---
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: langfuse
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://langfuse:password@langfuse_db:5432/langfuse
+      CLICKHOUSE_URL: http://clickhouse:8123
+    depends_on:
+      - langfuse-db
+      - clickhouse
+    restart: unless-stopped
+    networks:
+      - monitoring
+      - backend_network
+
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    networks:
+      - monitoring
+
+
+
+
+networks:
+  monitoring:
+  backend_network:
+    external: true
+
+volumes:
+  grafana_data:
+  clickhouse_data:
+  langfuse_db_data:

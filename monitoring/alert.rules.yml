@@ -1,0 +1,20 @@
+groups:
+  - name: basic-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Сервис недоступен"
+          description: "Сервис {{ $labels.instance }} не отвечает уже больше минуты"
+
+      - alert: BackendUnhealthy
+        expr: probe_success{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend unhealthy"
+          description: "Backend контейнер не отвечает"
