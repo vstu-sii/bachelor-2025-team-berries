@@ -24,10 +24,18 @@
 ## 2. **Quality Gates**
 
 ### **Текущее состояние:**
-
+- Автоматические тесты в CI/CD пайплайне
+- CI/CD настроен (сборка, деплой, health checks)
+- Мониторинг работает (метрики в Grafana)
+- Тесты не покрывают все use-cases MVP 
+- Нет проверки code style автоматически
+- Security scanning зависимостей не настроен
 
 ### **План улучшений:**
-
+- Добавить проверку code style в CI:
+- Добавить smoke test для Consumer LLM сервиса:
+- Добавить security scanning
+- Создать интеграционные тесты для всех use-cases
 
 ## 3. **Performance Benchmarks**
 
