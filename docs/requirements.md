@@ -155,7 +155,7 @@ AI Review Analyzer — интеллектуальная система для а
 
 **Backend:** Python/FastAPI + Celery + Redis
 
-**Database:** PostgreSQL + Redis (кеширование)
+**Database:** MySQL + Redis (кеширование)
 
 **Интеграции:**
 - Telegram Widget для аутентификации
