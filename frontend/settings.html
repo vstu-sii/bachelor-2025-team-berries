@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviewAnalysis - Настройки</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav a {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav a:hover, .nav a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .settings-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        
+        .profile-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .profile-info h2 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .profile-info p {
+            color: #666;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .subscription-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .subscription-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .subscription-card h3 {
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .subscription-features {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .subscription-features li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .subscription-features li:before {
+            content: '✓';
+            font-weight: bold;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        .danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .danger:hover {
+            background: #f1b0b7;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+        }
+        
+        .auth-error {
+            text-align: center;
+            padding: 80px 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .auth-error h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+        
+        .auth-error p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .footer-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="logo">ReviewAnalysis</a>
+        <div class="nav">
+            <a href="/dashboard">🏠 Дашборд</a>
+            <a href="/settings" class="active">⚙️ Настройки</a>
+            <button class="btn danger" onclick="logout()">🚪 Выйти</button>
+        </div>
+    </div>
+    
+    <div class="container" id="main-content">
+        <!-- Контент будет загружен сюда -->
+        <div class="loading">
+            <div style="font-size: 60px; margin-bottom: 20px;">⏳</div>
+            <h2>Загрузка настроек...</h2>
+            <p>Пожалуйста, подождите</p>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let userToken = null;
+        
+        // Функция для показа сообщения
+        function showMessage(text, type = 'info') {
+            // Создаем элемент сообщения
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = text;
+            
+            // Добавляем в начало контейнера
+            const container = document.getElementById('main-content');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            // Удаляем через 5 секунд
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Функция для проверки авторизации
+        async function checkAuth() {
+            console.log('🔐 Проверка авторизации на странице настроек...');
+            
+            // Получаем токен из localStorage
+            userToken = localStorage.getItem('token');
+            const savedUser = localStorage.getItem('user');
+            
+            console.log('Токен в localStorage:', userToken ? 'есть' : 'нет');
+            console.log('Пользователь в localStorage:', savedUser ? 'есть' : 'нет');
+            
+            if (!userToken || !savedUser) {
+                console.log('❌ Нет токена или пользователя в localStorage');
+                showAuthError();
+                return false;
+            }
+            
+            try {
+                console.log('📡 Проверяю токен через API...');
+                
+                // Проверяем токен через API
+                const response = await fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': 'Bearer ' + userToken
+                    }
+                });
+                
+                console.log('Статус ответа:', response.status);
+                
+                const data = await response.json();
+                console.log('Ответ сервера:', data);
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    console.log('✅ Пользователь авторизован:', currentUser);
+                    
+                    // Загружаем настройки
+                    loadSettings();
+                    
+                    return true;
+                } else {
+                    console.log('❌ Токен невалиден');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    showAuthError();
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка проверки токена:', error);
+                
+                // Показываем информацию, но не делаем редирект сразу
+                showMessage('⚠️ Проблемы с соединением с сервером. Проверяю локальные данные...', 'info');
+                
+                // Пробуем использовать сохраненные данные
+                if (savedUser) {
+                    try {
+                        currentUser = JSON.parse(savedUser);
+                        console.log('📋 Использую сохраненные данные пользователя:', currentUser);
+                        loadSettings();
+                        showMessage('⚠️ Используются локальные данные. Некоторые функции могут быть недоступны.', 'info');
+                        return true;
+                    } catch (e) {
+                        console.error('Ошибка парсинга сохраненного пользователя:', e);
+                        showAuthError();
+                        return false;
+                    }
+                } else {
+                    showAuthError();
+                    return false;
+                }
+            }
+        }
+        
+        // Функция показа ошибки авторизации
+        function showAuthError() {
+            const contentDiv = document.getElementById('main-content');
+            contentDiv.innerHTML = `
+                <div class="auth-error">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🔐</div>
+                    <h2>Требуется авторизация</h2>
+                    <p>Для доступа к настройкам необходимо войти в систему.</p>
+                    <div class="footer-actions">
+                        <button class="btn btn-primary" onclick="window.location.href='/'">
+                            🔐 Войти через Telegram
+                        </button>
+                        <button class="btn btn-secondary" onclick="testAuth()">
+                            🧪 Тестовая авторизация
+                        </button>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 14px; color: #999;">
+                        <button onclick="clearStorageAndReload()" style="background: none; border: none; color: #667eea; cursor: pointer; text-decoration: underline;">
+                            Очистить данные и перезагрузить
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Функция загрузки настроек
+        async function loadSettings() {
+            if (!userToken) {
+                showMessage('❌ Требуется авторизация для загрузки настроек', 'error');
+                return;
+            }
+            
+            const contentDiv = document.getElementById('main-content');
+            contentDiv.innerHTML = `
+                <div class="loading">
+                    <div style="font-size: 60px; margin-bottom: 20px;">⚙️</div>
+                    <h2>Загрузка настроек профиля...</h2>
+                    <p>Пожалуйста, подождите</p>
+                </div>
+            `;
+            
+            try {
+                console.log('📡 Загружаю настройки...');
+                
+                const response = await fetch('/api/settings', {
+                    headers: {
+                        'Authorization': 'Bearer ' + userToken
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('Получены настройки:', data);
+                
+                if (data.success) {
+                    displaySettings(data.profile);
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="auth-error">
+                            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                            <h2>Ошибка загрузки настроек</h2>
+                            <p>${data.message || 'Не удалось загрузить настройки профиля'}</p>
+                            <div class="footer-actions">
+                                <button class="btn btn-primary" onclick="loadSettings()">
+                                    🔄 Попробовать снова
+                                </button>
+                                <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">
+                                    ← Назад к дашборду
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка загрузки настроек:', error);
+                
+                // Используем данные из currentUser если API недоступен
+                if (currentUser) {
+                    console.log('📋 Использую данные из текущего пользователя');
+                    displaySettings(currentUser);
+                    showMessage('⚠️ Используются локальные данные. Некоторые функции могут быть недоступны.', 'info');
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="auth-error">
+                            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                            <h2>Ошибка соединения</h2>
+                            <p>Не удалось загрузить настройки. ${error.message}</p>
+                            <div class="footer-actions">
+                                <button class="btn btn-primary" onclick="loadSettings()">
+                                    🔄 Попробовать снова
+                                </button>
+                                <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">
+                                    ← Назад к дашборду
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Функция отображения настроек
+        function displaySettings(profile) {
+            const contentDiv = document.getElementById('main-content');
+            
+            // Получаем первую букву имени для аватара
+            const firstName = profile.telegram_first_name || 'П';
+            const avatarLetter = firstName.charAt(0).toUpperCase();
+            
+            // Форматируем дату регистрации
+            let registrationDate = 'Не указана';
+            if (profile.registration_date) {
+                const date = new Date(profile.registration_date);
+                registrationDate = date.toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            
+            // Форматируем дату последнего входа
+            let lastLogin = 'Не указан';
+            if (profile.last_login) {
+                const date = new Date(profile.last_login);
+                lastLogin = date.toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            contentDiv.innerHTML = `
+                <div class="settings-card">
+                    <h1>Настройки профиля</h1>
+                    
+                    <div class="profile-section">
+                        <div class="profile-header">
+                            <div class="profile-avatar">${avatarLetter}</div>
+                            <div class="profile-info">
+                                <h2>${profile.telegram_first_name || 'Пользователь'} ${profile.telegram_last_name || ''}</h2>
+                                <p>@${profile.telegram_username || 'без username'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">ID в Telegram</div>
+                                <div class="info-value">${profile.telegram_id || 'Не указан'}</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">Тарифный план</div>
+                                <div class="info-value">
+                                    ${getSubscriptionTierName(profile.subscription_tier || 'free')}
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">Дата регистрации</div>
+                                <div class="info-value">${registrationDate}</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">Последний вход</div>
+                                <div class="info-value">${lastLogin}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="subscription-section">
+                        <h2>Тарифный план</h2>
+                        
+                        <div class="subscription-card">
+                            <h3>${getSubscriptionTierName(profile.subscription_tier || 'free')}</h3>
+                            <p>Ваш текущий тарифный план</p>
+                            
+                            <ul class="subscription-features">
+                                ${getSubscriptionFeatures(profile.subscription_tier || 'free')}
+                            </ul>
+                            
+                            <div class="footer-actions">
+                                <button class="btn btn-primary" onclick="upgradeSubscription()">
+                                    💎 Перейти на PRO
+                                </button>
+                                <button class="btn btn-secondary" onclick="showSubscriptionInfo()">
+                                    ℹ️ Подробнее о тарифах
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 40px;">
+                        <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">
+                            ← Назад к дашборду
+                        </button>
+                        <button class="btn danger" onclick="logout()" style="margin-left: 15px;">
+                            🚪 Выйти из системы
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Функция получения названия тарифа
+        function getSubscriptionTierName(tier) {
+            const tiers = {
+                'free': '🚀 Free',
+                'pro': '💎 Pro',
+                'business': '👑 Business',
+                'enterprise': '🏢 Enterprise'
+            };
+            return tiers[tier] || '🚀 Free';
+        }
+        
+        // Функция получения списка возможностей тарифа
+        function getSubscriptionFeatures(tier) {
+            const features = {
+                'free': [
+                    'До 10 анализов в день',
+                    '3 активных товара',
+                    'Базовые графики и отчеты',
+                    'Поддержка по email'
+                ],
+                'pro': [
+                    'До 50 анализов в день',
+                    '50 активных товаров',
+                    'Расширенные графики и отчеты',
+                    'AI-инсайты и рекомендации',
+                    'Приоритетная поддержка'
+                ],
+                'business': [
+                    'До 200 анализов в день',
+                    '200 активных товаров',
+                    'Кастомные отчеты',
+                    'API доступ',
+                    'Персональный менеджер'
+                ]
+            };
+            
+            const tierFeatures = features[tier] || features['free'];
+            return tierFeatures.map(feature => `<li>${feature}</li>`).join('');
+        }
+        
+        // Функция выхода
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (error) {
+                // Игнорируем ошибки при выходе
+            }
+            
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Редирект на главную с параметром logout
+            window.location.href = '/?logout=true';
+        }
+        
+        // Тестовая авторизация (для отладки)
+        async function testAuth() {
+            showMessage('🔄 Тестовая авторизация...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: 123456789,
+                        first_name: "Тестовый",
+                        last_name: "Пользователь",
+                        username: "test_user"
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('✅ Тестовая авторизация успешна!', 'success');
+                    
+                    // Перезагружаем страницу
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showMessage(`❌ ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Ошибка: ${error.message}`, 'error');
+            }
+        }
+        
+        // Очистка localStorage и перезагрузка
+        function clearStorageAndReload() {
+            localStorage.clear();
+            window.location.reload();
+        }
+        
+        // Функции для работы с подписками (заглушки)
+        function upgradeSubscription() {
+            alert('Функция перехода на PRO тариф будет доступна в ближайшее время!');
+        }
+        
+        function showSubscriptionInfo() {
+            alert('Free: до 10 анализов в день, 3 товара\nPro: до 50 анализов в день, 50 товаров\nBusiness: до 200 анализов в день, 200 товаров');
+        }
+        
+        // Проверка авторизации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('⚙️ Страница настроек загружена');
+            
+            // Даем время на загрузку страницы
+            setTimeout(async () => {
+                await checkAuth();
+            }, 100);
+        });
+        
+        // Логирование для отладки
+        console.log('Settings script loaded');
+        console.log('Current URL:', window.location.href);
+        console.log('LocalStorage token:', localStorage.getItem('token') ? 'exists' : 'not found');
+    </script>
+</body>
+</html>

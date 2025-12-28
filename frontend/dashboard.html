@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviewAnalysis - Дашборд</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .nav {
+            background: white;
+            margin: 20px 40px;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .nav a {
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav a:hover, .nav a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            padding: 0 40px 40px;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .welcome-section h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+        
+        .project-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .project-card p {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .auth-error {
+            text-align: center;
+            padding: 60px 40px;
+            background: white;
+            border-radius: 15px;
+            margin: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .auth-error h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .auth-error p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        /* Модальное окно для выбора проекта */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalAppear 0.3s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .project-list {
+            margin: 20px 0;
+        }
+        
+        .project-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .project-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .project-item.selected {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-color: #667eea;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons .btn {
+            flex: 1;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="logo">ReviewAnalysis</a>
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <span id="userName">Загрузка...</span>
+            <a href="/settings" class="btn btn-secondary">⚙️ Настройки</a>
+            <button class="btn" onclick="logout()" style="background: #f8f9fa; color: #666;">🚪 Выйти</button>
+        </div>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard" class="active">🏠 Дашборд</a>
+        <a href="javascript:void(0)" onclick="addProject()">📦 Добавить товар</a>
+        <a href="javascript:void(0)" onclick="showAnalysisProjectSelector()">📊 Анализ</a>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-section">
+            <h1 id="welcomeTitle">Добро пожаловать!</h1>
+            <p>Здесь вы можете управлять своими товарами и просматривать результаты анализа отзывов.</p>
+            <button class="btn btn-primary" onclick="addProject()">+ Добавить новый товар</button>
+        </div>
+        
+        <div id="message"></div>
+        
+        <div id="content">
+            <!-- Контент будет загружен сюда -->
+            <div class="loading">
+                <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                <h3>Загрузка данных...</h3>
+                <p>Пожалуйста, подождите</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора проекта для анализа -->
+    <div id="projectSelectorModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>📊 Выберите проект для анализа</h2>
+            <p style="color: #666; text-align: center; margin-bottom: 20px;">
+                После запуска анализа вы будете перенаправлены на страницу со всеми анализами этого проекта.
+            </p>
+            
+            <div id="projectList" class="project-list">
+                <!-- Список проектов будет загружен здесь -->
+                <div class="loading" style="padding: 20px;">
+                    <div>Загрузка проектов...</div>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn" onclick="hideProjectSelector()" style="background: #f8f9fa; color: #666;">Отмена</button>
+                <button class="btn btn-primary" onclick="startAnalysisOnSelectedProject()" id="startAnalysisBtn" disabled>
+                    Запустить анализ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let userToken = null;
+        let allProjects = [];
+        let selectedProjectId = null;
+        
+        // Функция для показа сообщения
+        function showMessage(text, type = 'info') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+            
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Функция для проверки авторизации
+        async function checkAuth() {
+            console.log('🔐 Проверка авторизации...');
+            
+            // Получаем токен из localStorage
+            userToken = localStorage.getItem('token');
+            const savedUser = localStorage.getItem('user');
+            
+            console.log('Токен в localStorage:', userToken ? 'есть' : 'нет');
+            console.log('Пользователь в localStorage:', savedUser ? 'есть' : 'нет');
+            
+            if (!userToken || !savedUser) {
+                console.log('❌ Нет токена или пользователя в localStorage');
+                showAuthError();
+                return false;
+            }
+            
+            try {
+                console.log('📡 Проверяю токен через API...');
+                
+                // Проверяем токен через API
+                const response = await fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': 'Bearer ' + userToken
+                    }
+                });
+                
+                console.log('Статус ответа:', response.status);
+                
+                const data = await response.json();
+                console.log('Ответ сервера:', data);
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    console.log('✅ Пользователь авторизован:', currentUser);
+                    
+                    // Обновляем интерфейс
+                    updateUserInfo();
+                    
+                    // Загружаем проекты
+                    loadProjects();
+                    
+                    return true;
+                } else {
+                    console.log('❌ Токен невалиден');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    showAuthError();
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка проверки токена:', error);
+                
+                // Показываем информацию, но не делаем редирект сразу
+                showMessage('⚠️ Проблемы с соединением с сервером. Проверяю локальные данные...', 'info');
+                
+                // Пробуем использовать сохраненные данные
+                if (savedUser) {
+                    try {
+                        currentUser = JSON.parse(savedUser);
+                        console.log('📋 Использую сохраненные данные пользователя:', currentUser);
+                        updateUserInfo();
+                        showMessage('⚠️ Используются локальные данные. Некоторые функции могут быть недоступны.', 'info');
+                        loadProjects();
+                        return true;
+                    } catch (e) {
+                        console.error('Ошибка парсинга сохраненного пользователя:', e);
+                        showAuthError();
+                        return false;
+                    }
+                } else {
+                    showAuthError();
+                    return false;
+                }
+            }
+        }
+        
+        // Функция показа ошибки авторизации
+        function showAuthError() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <div class="auth-error">
+                    <div style="font-size: 60px; margin-bottom: 20px;">🔐</div>
+                    <h2>Требуется авторизация</h2>
+                    <p>Для доступа к дашборду необходимо войти в систему.</p>
+                    <div style="margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="window.location.href='/'">
+                            🔐 Войти через Telegram
+                        </button>
+                        <button class="btn btn-secondary" onclick="testAuth()" style="margin-left: 15px;">
+                            🧪 Тестовая авторизация
+                        </button>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 14px; color: #999;">
+                        <p>Или попробуйте:</p>
+                        <button onclick="clearStorageAndReload()" style="background: none; border: none; color: #667eea; cursor: pointer; text-decoration: underline;">
+                            Очистить данные и перезагрузить
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Функция обновления информации о пользователе
+        function updateUserInfo() {
+            if (!currentUser) return;
+            
+            // Обновляем приветствие
+            const welcomeTitle = document.getElementById('welcomeTitle');
+            welcomeTitle.textContent = `Добро пожаловать, ${currentUser.telegram_first_name || 'Пользователь'}!`;
+            
+            // Обновляем имя пользователя
+            const userName = document.getElementById('userName');
+            userName.textContent = currentUser.telegram_first_name || 'Пользователь';
+            
+            // Обновляем аватар
+            const userAvatar = document.getElementById('userAvatar');
+            if (currentUser.telegram_first_name) {
+                userAvatar.textContent = currentUser.telegram_first_name.charAt(0).toUpperCase();
+            }
+        }
+        
+        // Функция загрузки проектов
+        async function loadProjects() {
+            if (!userToken) {
+                showMessage('❌ Требуется авторизация для загрузки проектов', 'error');
+                return;
+            }
+            
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <div class="loading">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
+                    <h3>Загрузка проектов...</h3>
+                    <p>Пожалуйста, подождите</p>
+                </div>
+            `;
+            
+            try {
+                console.log('📡 Загружаю проекты...');
+                
+                // Используем упрощенный запрос без пагинации
+                const response = await fetch('/api/projects', {
+                    headers: {
+                        'Authorization': 'Bearer ' + userToken
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('Получены проекты:', data);
+                
+                if (data.success) {
+                    allProjects = data.projects || [];
+                    displayProjects(allProjects);
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h3>Ошибка загрузки проектов</h3>
+                            <p>${data.message || 'Не удалось загрузить проекты'}</p>
+                            <button class="btn btn-primary" onclick="loadProjects()">🔄 Попробовать снова</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка загрузки проектов:', error);
+                
+                contentDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Ошибка соединения</h3>
+                        <p>Не удалось загрузить проекты. ${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadProjects()">🔄 Попробовать снова</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Функция отображения проектов
+        function displayProjects(projects) {
+            const contentDiv = document.getElementById('content');
+            
+            if (!projects || projects.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>Пока нет товаров</h3>
+                        <p>Добавьте свой первый товар для анализа отзывов</p>
+                        <button class="btn btn-primary" onclick="addProject()">+ Добавить первый товар</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let projectsHTML = '<h2 style="margin-bottom: 20px; color: #333;">Мои проекты</h2>';
+            projectsHTML += '<div class="projects-grid">';
+            
+            projects.forEach(project => {
+                projectsHTML += `
+                    <div class="project-card">
+                        <h3>${project.product_name || 'Без названия'}</h3>
+                        <p><strong>Маркетплейс:</strong> ${project.marketplace_type || 'Не указан'}</p>
+                        <p><strong>Добавлен:</strong> ${new Date(project.created_at).toLocaleDateString('ru-RU')}</p>
+                        <div style="margin-top: 20px;">
+                            <a href="/product/${project.id}" class="btn btn-primary">Открыть</a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            projectsHTML += '</div>';
+            contentDiv.innerHTML = projectsHTML;
+        }
+        
+        // Функция добавления проекта
+        async function addProject() {
+            if (!userToken) {
+                showMessage('❌ Требуется авторизация', 'error');
+                return;
+            }
+            
+            const url = prompt('Введите ссылку на товар с маркетплейса:');
+            if (!url) return;
+            
+            const name = prompt('Введите название товара (опционально):') || 'Без названия';
+            
+            showMessage('🔄 Добавление товара...', 'info');
+            
+            try {
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + userToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        marketplace_url: url,
+                        product_name: name,
+                        marketplace_type: 'wildberries'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ Товар успешно добавлен!', 'success');
+                    loadProjects();
+                } else {
+                    showMessage(`❌ ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Ошибка: ${error.message}`, 'error');
+            }
+        }
+        
+        // Показать модальное окно выбора проекта для анализа
+        async function showAnalysisProjectSelector() {
+            if (!userToken) {
+                showMessage('❌ Требуется авторизация', 'error');
+                return;
+            }
+            
+            if (allProjects.length === 0) {
+                showMessage('📭 У вас пока нет проектов для анализа. Добавьте товар сначала.', 'info');
+                return;
+            }
+            
+            const modal = document.getElementById('projectSelectorModal');
+            const projectListDiv = document.getElementById('projectList');
+            
+            // Сбрасываем выбор
+            selectedProjectId = null;
+            
+            // Заполняем список проектов
+            let projectsHTML = '';
+            allProjects.forEach(project => {
+                projectsHTML += `
+                    <div class="project-item" onclick="selectProject(${project.id})" id="project-${project.id}">
+                        <strong>${project.product_name || 'Без названия'}</strong>
+                        <p style="color: #666; font-size: 14px; margin-top: 5px;">
+                            ${project.marketplace_type || 'Не указан'} • 
+                            Добавлен: ${new Date(project.created_at).toLocaleDateString('ru-RU')}
+                        </p>
+                    </div>
+                `;
+            });
+            
+            projectListDiv.innerHTML = projectsHTML;
+            
+            // Обновляем кнопку
+            document.getElementById('startAnalysisBtn').disabled = true;
+            document.getElementById('startAnalysisBtn').textContent = 'Запустить анализ';
+            
+            // Показываем модальное окно
+            modal.style.display = 'flex';
+        }
+        
+        // Скрыть модальное окно выбора проекта
+        function hideProjectSelector() {
+            const modal = document.getElementById('projectSelectorModal');
+            modal.style.display = 'none';
+            selectedProjectId = null;
+        }
+        
+        // Выбрать проект в модальном окне
+        function selectProject(projectId) {
+            // Сбрасываем предыдущий выбор
+            document.querySelectorAll('.project-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Устанавливаем новый выбор
+            const selectedItem = document.getElementById(`project-${projectId}`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
+                selectedProjectId = projectId;
+                document.getElementById('startAnalysisBtn').disabled = false;
+            }
+        }
+        
+        // Запустить анализ на выбранном проекте и перейти на страницу анализов
+        async function startAnalysisOnSelectedProject() {
+            if (!selectedProjectId) {
+                showMessage('❌ Выберите проект для анализа', 'error');
+                return;
+            }
+            
+            hideProjectSelector();
+            showMessage('🔄 Запуск анализа...', 'info');
+            
+            try {
+                // Запускаем анализ
+                const response = await fetch(`/api/projects/${selectedProjectId}/analyses`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + userToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`✅ Анализ запущен! Перенаправляю на страницу анализов...`, 'success');
+                    
+                    // Через 2 секунды переходим на страницу анализов проекта
+                    setTimeout(() => {
+                        window.location.href = `/product/${selectedProjectId}`;
+                    }, 2000);
+                } else {
+                    showMessage(`❌ ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Ошибка: ${error.message}`, 'error');
+            }
+        }
+        
+        // Функция выхода
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (error) {
+                // Игнорируем ошибки при выходе
+            }
+            
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Редирект на главную с параметром logout
+            window.location.href = '/?logout=true';
+        }
+        
+        // Тестовая авторизация (для отладки)
+        async function testAuth() {
+            showMessage('🔄 Тестовая авторизация...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: 123456789,
+                        first_name: "Тестовый",
+                        last_name: "Пользователь",
+                        username: "test_user"
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('✅ Тестовая авторизация успешна!', 'success');
+                    
+                    // Перезагружаем страницу
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showMessage(`❌ ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Ошибка: ${error.message}`, 'error');
+            }
+        }
+        
+        // Очистка localStorage и перезагрузка
+        function clearStorageAndReload() {
+            localStorage.clear();
+            window.location.reload();
+        }
+        
+        // Проверка авторизации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 Страница дашборда загружена');
+            
+            // Даем время на загрузку страницы
+            setTimeout(async () => {
+                await checkAuth();
+            }, 100);
+        });
+        
+        // Логирование для отладки
+        console.log('Dashboard script loaded');
+        console.log('Current URL:', window.location.href);
+        console.log('LocalStorage token:', localStorage.getItem('token') ? 'exists' : 'not found');
+        
+        // Закрытие модального окна по клику на фон
+        document.getElementById('projectSelectorModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideProjectSelector();
+            }
+        });
+        
+        // Закрытие модального окна по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideProjectSelector();
+            }
+        });
+    </script>
+</body>
+</html>
