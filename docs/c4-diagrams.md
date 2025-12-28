@@ -12,7 +12,8 @@
 
 
 ## Backend Components
-<img width="1639" height="649" alt="image" src="https://github.com/user-attachments/assets/0a6fd18a-90fe-43b8-9318-33d6cb03f8bd" />
+<img width="2000" height="966" alt="image" src="https://github.com/user-attachments/assets/40fbaed2-afd1-41ee-abbc-9906809146ca" />
+
 
 
 
