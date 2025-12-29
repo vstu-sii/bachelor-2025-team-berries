@@ -1,4 +1,3 @@
-# 📚 AI Review Analyzer: NLP Optimization Best Practices
 
 ## 🧱 Baseline
 
