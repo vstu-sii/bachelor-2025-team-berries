@@ -1,0 +1,2371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сравнение анализов - ReviewAnalysis</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка с навигацией -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <a href="/dashboard" class="logo">ReviewAnalysis</a>
+                <nav class="dashboard-nav">
+                    <a href="/dashboard" class="nav-link">
+                        <i class="fas fa-box"></i> Мои товары
+                    </a>
+                    <a href="/analytics" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Аналитика
+                    </a>
+                    <a href="/comparisons" class="nav-link active">
+                        <i class="fas fa-exchange-alt"></i> Сравнения
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span id="userGreeting">Загрузка...</span>
+                </div>
+                
+                <a href="/dashboard" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад
+                </a>
+            </div>
+        </header>
+
+        <!-- Индикатор загрузки -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>Загрузка отчета сравнения...</p>
+        </div>
+
+        <!-- Основное содержимое -->
+        <main class="comparison-content" id="comparisonContent" style="display: none;">
+            <!-- Заголовок отчета -->
+            <div class="report-header">
+                <div class="report-info">
+                    <h1><i class="fas fa-exchange-alt"></i> Сравнительный отчет</h1>
+                    <div class="report-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-box"></i>
+                            <span id="productName">Товар</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="reportDate">Дата</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-chart-bar"></i>
+                            <span id="analysisCount">0 анализов</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-actions">
+                    <button id="exportReportBtn" class="btn-primary">
+                        <i class="fas fa-file-export"></i> Экспорт
+                    </button>
+                    <button id="saveReportBtn" class="btn-secondary">
+                        <i class="fas fa-save"></i> Сохранить
+                    </button>
+                    <button id="newComparisonBtn" class="btn-outline">
+                        <i class="fas fa-plus"></i> Новое сравнение
+                    </button>
+                </div>
+            </div>
+
+            <!-- Выбранные анализы -->
+            <div class="selected-analyses">
+                <h3><i class="fas fa-list-check"></i> Выбранные анализы</h3>
+                <div class="analyses-timeline" id="analysesTimeline">
+                    <!-- Таймлайн будет загружен динамически -->
+                </div>
+            </div>
+
+            <!-- Сводная информация -->
+            <div class="summary-section">
+                <h3><i class="fas fa-chart-pie"></i> Сводная статистика</h3>
+                <div class="summary-cards" id="summaryCards">
+                    <!-- Карточки статистики -->
+                </div>
+            </div>
+
+            <!-- Основные графики сравнения -->
+            <div class="comparison-charts">
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> Динамика ключевых метрик</h3>
+                        <div class="chart-legend" id="ratingLegend">
+                            <!-- Легенда графика -->
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="comparisonRatingChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-comments"></i> Распределение тональности</h3>
+                        <div class="period-selector">
+                            <select id="sentimentPeriod" class="period-select">
+                                <option value="all">Все периоды</option>
+                                <option value="latest">Последний анализ</option>
+                                <option value="first">Первый анализ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="sentiment-charts-grid">
+                        <div class="sentiment-chart-container">
+                            <canvas id="sentimentComparisonChart"></canvas>
+                        </div>
+                        <div class="sentiment-stats-comparison">
+                            <div class="sentiment-change-list" id="sentimentChangeList">
+                                <!-- Изменения тональности -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Детальное сравнение -->
+            <div class="detailed-comparison">
+                <h3><i class="fas fa-table"></i> Детальное сравнение</h3>
+                
+                <div class="tabs-container">
+                    <div class="detail-tabs">
+                        <button class="detail-tab active" data-tab="aspects">
+                            <i class="fas fa-star"></i> Ключевые аспекты
+                        </button>
+                        <button class="detail-tab" data-tab="metrics">
+                            <i class="fas fa-chart-bar"></i> Метрики
+                        </button>
+                        <button class="detail-tab" data-tab="trends">
+                            <i class="fas fa-trend-up"></i> Тренды
+                        </button>
+                    </div>
+                    
+                    <div class="detail-content">
+                        <!-- Вкладка ключевых аспектов -->
+                        <div class="detail-pane active" id="aspectsPane">
+                            <div class="aspects-comparison">
+                                <div class="aspects-controls">
+                                    <div class="aspect-filter">
+                                        <select id="aspectCategoryFilter" class="filter-select">
+                                            <option value="all">Все категории</option>
+                                            <option value="product">Товар</option>
+                                            <option value="service">Сервис</option>
+                                            <option value="shipping">Доставка</option>
+                                            <option value="price">Цена</option>
+                                        </select>
+                                    </div>
+                                    <div class="aspect-sort">
+                                        <select id="aspectSortBy" class="filter-select">
+                                            <option value="change">По изменению</option>
+                                            <option value="mentions">По упоминаниям</option>
+                                            <option value="sentiment">По тональности</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="aspects-table-container">
+                                    <table class="aspects-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Аспект</th>
+                                                <th id="firstPeriodHeader">Период 1</th>
+                                                <th id="lastPeriodHeader">Период 2</th>
+                                                <th>Изменение</th>
+                                                <th>Тренд</th>
+                                                <th>Инсайт</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="aspectsTableBody">
+                                            <!-- Данные аспектов -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Вкладка метрик -->
+                        <div class="detail-pane" id="metricsPane">
+                            <div class="metrics-comparison">
+                                <div class="metrics-grid">
+                                    <div class="metrics-table-container">
+                                        <table class="metrics-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Метрика</th>
+                                                    <th id="metricsFirstPeriod">Период 1</th>
+                                                    <th id="metricsLastPeriod">Период 2</th>
+                                                    <th>Изменение</th>
+                                                    <th>Динамика</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="metricsTableBody">
+                                                <!-- Данные метрик -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="metrics-summary">
+                                        <h4>Ключевые изменения</h4>
+                                        <div class="key-changes" id="keyChanges">
+                                            <!-- Ключевые изменения -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Вкладка трендов -->
+                        <div class="detail-pane" id="trendsPane">
+                            <div class="trends-analysis">
+                                <div class="trends-chart-container">
+                                    <canvas id="trendsChart"></canvas>
+                                </div>
+                                
+                                <div class="trends-insights">
+                                    <h4><i class="fas fa-lightbulb"></i> AI Анализ трендов</h4>
+                                    <div class="insight-card">
+                                        <div class="insight-header">
+                                            <div class="insight-icon">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                            <div class="insight-title">
+                                                <h5>Общий тренд</h5>
+                                                <span class="trend-badge" id="overallTrendBadge">Стабильный</span>
+                                            </div>
+                                        </div>
+                                        <div class="insight-text" id="overallTrendText">
+                                            Загрузка анализа трендов...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="insight-card">
+                                        <div class="insight-header">
+                                            <div class="insight-icon">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </div>
+                                            <div class="insight-title">
+                                                <h5>Риски</h5>
+                                            </div>
+                                        </div>
+                                        <div class="insight-text" id="risksText">
+                                            Загрузка анализа рисков...
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="insight-card">
+                                        <div class="insight-header">
+                                            <div class="insight-icon">
+                                                <i class="fas fa-bullseye"></i>
+                                            </div>
+                                            <div class="insight-title">
+                                                <h5>Рекомендации</h5>
+                                            </div>
+                                        </div>
+                                        <div class="insight-text" id="recommendationsText">
+                                            Загрузка рекомендаций...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Инсайты -->
+            <div class="ai-insights-section">
+                <div class="insights-header">
+                    <h3><i class="fas fa-robot"></i> AI Инсайты и рекомендации</h3>
+                    <button id="regenerateInsightsBtn" class="btn-secondary">
+                        <i class="fas fa-sync"></i> Перегенерировать
+                    </button>
+                </div>
+                
+                <div class="insights-grid">
+                    <div class="insight-card large">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h4>Общий вывод</h4>
+                        </div>
+                        <div class="insight-content" id="overallConclusion">
+                            Загрузка общего вывода...
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <h4>Что улучшилось</h4>
+                        </div>
+                        <div class="insight-content" id="improvementsList">
+                            <!-- Улучшения -->
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h4>Что ухудшилось</h4>
+                        </div>
+                        <div class="insight-content" id="deteriorationsList">
+                            <!-- Ухудшения -->
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <i class="fas fa-bullseye"></i>
+                            </div>
+                            <h4>Приоритетные действия</h4>
+                        </div>
+                        <div class="insight-content" id="priorityActions">
+                            <!-- Приоритетные действия -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- История сравнений -->
+            <div class="comparison-history">
+                <div class="section-header">
+                    <h3><i class="fas fa-history"></i> История сравнений</h3>
+                    <button id="toggleHistoryBtn" class="btn-small">
+                        <i class="fas fa-chevron-down"></i> Показать
+                    </button>
+                </div>
+                
+                <div class="history-list collapsed" id="comparisonHistory">
+                    <!-- История сравнений будет загружена динамически -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно экспорта -->
+    <div class="modal" id="exportModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-export"></i> Экспорт отчета</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="option-group">
+                        <h4>Формат экспорта</h4>
+                        <div class="format-options">
+                            <label class="format-option">
+                                <input type="radio" name="exportFormat" value="pdf" checked>
+                                <div class="option-content">
+                                    <div class="option-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div>
+                                        <div class="option-title">PDF</div>
+                                        <div class="option-desc">Оптимально для печати и обмена</div>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="format-option">
+                                <input type="radio" name="exportFormat" value="excel">
+                                <div class="option-content">
+                                    <div class="option-icon">
+                                        <i class="fas fa-file-excel"></i>
+                                    </div>
+                                    <div>
+                                        <div class="option-title">Excel</div>
+                                        <div class="option-desc">Данные для дальнейшего анализа</div>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="format-option">
+                                <input type="radio" name="exportFormat" value="json">
+                                <div class="option-content">
+                                    <div class="option-icon">
+                                        <i class="fas fa-code"></i>
+                                    </div>
+                                    <div>
+                                        <div class="option-title">JSON</div>
+                                        <div class="option-desc">Структурированные данные</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group">
+                        <h4>Что включить в отчет</h4>
+                        <div class="include-options">
+                            <label class="include-option">
+                                <input type="checkbox" name="includeGraphs" checked>
+                                <span>Графики и диаграммы</span>
+                            </label>
+                            <label class="include-option">
+                                <input type="checkbox" name="includeTables" checked>
+                                <span>Таблицы с данными</span>
+                            </label>
+                            <label class="include-option">
+                                <input type="checkbox" name="includeInsights" checked>
+                                <span>AI инсайты</span>
+                            </label>
+                            <label class="include-option">
+                                <input type="checkbox" name="includeRawData">
+                                <span>Сырые данные</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group">
+                        <h4>Настройки</h4>
+                        <div class="export-settings">
+                            <div class="setting-item">
+                                <label for="exportQuality">Качество графиков</label>
+                                <select id="exportQuality" class="settings-select">
+                                    <option value="high">Высокое</option>
+                                    <option value="medium" selected>Среднее</option>
+                                    <option value="low">Низкое</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="exportLanguage">Язык отчета</label>
+                                <select id="exportLanguage" class="settings-select">
+                                    <option value="ru" selected>Русский</option>
+                                    <option value="en">Английский</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelExportBtn">Отмена</button>
+                <button class="btn-primary" id="confirmExportBtn">
+                    <i class="fas fa-download"></i> Экспортировать
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Прогресс экспорта -->
+    <div class="progress-overlay" id="exportProgress" style="display: none;">
+        <div class="progress-modal">
+            <div class="progress-content">
+                <div class="progress-header">
+                    <h3><i class="fas fa-file-export"></i> Экспорт отчета</h3>
+                    <div class="progress-percent" id="exportProgressPercent">0%</div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="exportProgressFill" style="width: 0%"></div>
+                </div>
+                
+                <div class="progress-details">
+                    <div class="progress-step active">
+                        <div class="step-icon">1</div>
+                        <div class="step-info">
+                            <div class="step-title">Подготовка данных</div>
+                            <div class="step-detail" id="exportStep1">Ожидание...</div>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-icon">2</div>
+                        <div class="step-info">
+                            <div class="step-title">Генерация отчета</div>
+                            <div class="step-detail" id="exportStep2">В очереди</div>
+                        </div>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-icon">3</div>
+                        <div class="step-info">
+                            <div class="step-title">Создание файла</div>
+                            <div class="step-detail" id="exportStep3">В очереди</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress-notice">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="exportNotice">Подготовка отчета...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Основной скрипт для страницы сравнения
+        
+        let comparisonData = null;
+        let comparisonCharts = {};
+        let selectedComparisonId = null;
+        
+        // Загрузка данных сравнения
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Проверка авторизации
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            
+            if (!user || !token) {
+                window.location.href = '/';
+                return;
+            }
+            
+            // Получение ID сравнения из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const comparisonId = urlParams.get('id');
+            
+            if (!comparisonId) {
+                // Если нет ID, проверяем localStorage
+                const lastComparison = localStorage.getItem('lastComparison');
+                if (lastComparison) {
+                    selectedComparisonId = JSON.parse(lastComparison).id;
+                } else {
+                    window.location.href = '/dashboard';
+                    return;
+                }
+            } else {
+                selectedComparisonId = comparisonId;
+            }
+            
+            try {
+                await loadComparisonData(selectedComparisonId);
+                
+                // Показываем контент после загрузки
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('comparisonContent').style.display = 'block';
+                
+                // Инициализация графиков
+                initComparisonCharts();
+                
+                // Обновление данных пользователя
+                updateUserInfo();
+            } catch (error) {
+                console.error('Ошибка загрузки данных сравнения:', error);
+                showError('Не удалось загрузить данные сравнения');
+            }
+        });
+        
+        // Загрузка данных сравнения
+        async function loadComparisonData(comparisonId) {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/comparisons/${comparisonId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки сравнения');
+            }
+            
+            comparisonData = await response.json();
+            updateComparisonUI();
+        }
+        
+        // Обновление интерфейса сравнения
+        function updateComparisonUI() {
+            if (!comparisonData) return;
+            
+            // Основная информация
+            document.getElementById('productName').textContent = comparisonData.product_name;
+            document.getElementById('reportDate').textContent = formatDate(comparisonData.generated_at);
+            document.getElementById('analysisCount').textContent = `${comparisonData.analysis_count} анализов`;
+            
+            // Заголовок страницы
+            document.title = `Сравнение: ${comparisonData.product_name} - ReviewAnalysis`;
+            
+            // Обновление таймлайна
+            updateTimeline();
+            
+            // Обновление сводной статистики
+            updateSummaryCards();
+            
+            // Обновление детального сравнения
+            updateDetailedComparison();
+            
+            // Обновление AI инсайтов
+            updateAIInsights();
+            
+            // Загрузка истории сравнений
+            loadComparisonHistory();
+        }
+        
+        // Обновление таймлайна
+        function updateTimeline() {
+            const timeline = document.getElementById('analysesTimeline');
+            if (!comparisonData.analyses || comparisonData.analyses.length === 0) {
+                timeline.innerHTML = '<p class="empty-message">Нет данных для отображения</p>';
+                return;
+            }
+            
+            const analyses = comparisonData.analyses;
+            timeline.innerHTML = analyses.map((analysis, index) => `
+                <div class="timeline-item ${index === 0 ? 'first' : ''} ${index === analyses.length - 1 ? 'last' : ''}">
+                    <div class="timeline-marker">
+                        <div class="marker-dot"></div>
+                        ${index < analyses.length - 1 ? '<div class="timeline-line"></div>' : ''}
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <h4>Период ${index + 1}</h4>
+                            <span class="timeline-date">${formatDate(analysis.period_start)} - ${formatDate(analysis.period_end)}</span>
+                        </div>
+                        <div class="timeline-stats">
+                            <div class="timeline-stat">
+                                <span class="stat-label">Рейтинг:</span>
+                                <span class="stat-value ${getRatingClass(analysis.average_rating)}">
+                                    ${analysis.average_rating.toFixed(1)}
+                                </span>
+                            </div>
+                            <div class="timeline-stat">
+                                <span class="stat-label">Отзывов:</span>
+                                <span class="stat-value">${analysis.total_reviews}</span>
+                            </div>
+                            <div class="timeline-stat">
+                                <span class="stat-label">Длительность:</span>
+                                <span class="stat-value">${analysis.parsing_duration || 0}с</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Обновление сводной статистики
+        function updateSummaryCards() {
+            const summaryCards = document.getElementById('summaryCards');
+            const analyses = comparisonData.analyses;
+            
+            if (!analyses || analyses.length < 2) {
+                summaryCards.innerHTML = '<p class="empty-message">Недостаточно данных для сравнения</p>';
+                return;
+            }
+            
+            const first = analyses[0];
+            const last = analyses[analyses.length - 1];
+            
+            // Рассчитываем изменения
+            const ratingChange = last.average_rating - first.average_rating;
+            const reviewsChange = last.total_reviews - first.total_reviews;
+            const positiveChange = last.positive_count - first.positive_count;
+            const negativeChange = last.negative_count - first.negative_count;
+            
+            summaryCards.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="summary-info">
+                        <div class="summary-title">Средний рейтинг</div>
+                        <div class="summary-values">
+                            <div class="summary-value">${last.average_rating.toFixed(1)}</div>
+                            <div class="summary-change ${ratingChange >= 0 ? 'positive' : 'negative'}">
+                                ${ratingChange >= 0 ? '+' : ''}${ratingChange.toFixed(1)}
+                            </div>
+                        </div>
+                        <div class="summary-detail">
+                            Было: ${first.average_rating.toFixed(1)}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="summary-info">
+                        <div class="summary-title">Всего отзывов</div>
+                        <div class="summary-values">
+                            <div class="summary-value">${last.total_reviews}</div>
+                            <div class="summary-change ${reviewsChange >= 0 ? 'positive' : 'negative'}">
+                                ${reviewsChange >= 0 ? '+' : ''}${reviewsChange}
+                            </div>
+                        </div>
+                        <div class="summary-detail">
+                            Было: ${first.total_reviews}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-icon">
+                        <i class="fas fa-thumbs-up"></i>
+                    </div>
+                    <div class="summary-info">
+                        <div class="summary-title">Позитивных отзывов</div>
+                        <div class="summary-values">
+                            <div class="summary-value">${last.positive_count}</div>
+                            <div class="summary-change ${positiveChange >= 0 ? 'positive' : 'negative'}">
+                                ${positiveChange >= 0 ? '+' : ''}${positiveChange}
+                            </div>
+                        </div>
+                        <div class="summary-detail">
+                            ${positiveChange >= 0 ? 'Увеличилось' : 'Уменьшилось'} на ${Math.abs(positiveChange)}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-icon">
+                        <i class="fas fa-thumbs-down"></i>
+                    </div>
+                    <div class="summary-info">
+                        <div class="summary-title">Негативных отзывов</div>
+                        <div class="summary-values">
+                            <div class="summary-value">${last.negative_count}</div>
+                            <div class="summary-change ${negativeChange <= 0 ? 'positive' : 'negative'}">
+                                ${negativeChange <= 0 ? '' : '+'}${negativeChange}
+                            </div>
+                        </div>
+                        <div class="summary-detail">
+                            ${negativeChange <= 0 ? 'Уменьшилось' : 'Увеличилось'} на ${Math.abs(negativeChange)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Инициализация графиков сравнения
+        function initComparisonCharts() {
+            // График динамики рейтинга
+            const ratingCtx = document.getElementById('comparisonRatingChart').getContext('2d');
+            comparisonCharts.rating = new Chart(ratingCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 0,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Рейтинг'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Период'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+            
+            // График распределения тональности
+            const sentimentCtx = document.getElementById('sentimentComparisonChart').getContext('2d');
+            comparisonCharts.sentiment = new Chart(sentimentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Позитивные', 'Нейтральные', 'Негативные'],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Количество отзывов'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+            
+            // График трендов
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            comparisonCharts.trends = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Загрузка данных для графиков
+            loadComparisonChartData();
+        }
+        
+        // Загрузка данных для графиков сравнения
+        async function loadComparisonChartData() {
+            if (!comparisonData.analyses || comparisonData.analyses.length === 0) return;
+            
+            const analyses = comparisonData.analyses;
+            
+            // Данные для графика рейтинга
+            const ratingLabels = analyses.map((a, i) => `Период ${i + 1}`);
+            const ratingData = analyses.map(a => a.average_rating);
+            
+            comparisonCharts.rating.data.labels = ratingLabels;
+            comparisonCharts.rating.data.datasets = [{
+                label: 'Средний рейтинг',
+                data: ratingData,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }];
+            comparisonCharts.rating.update();
+            
+            // Данные для графика тональности (сравнение первого и последнего периода)
+            const first = analyses[0];
+            const last = analyses[analyses.length - 1];
+            
+            comparisonCharts.sentiment.data.datasets = [
+                {
+                    label: 'Первый период',
+                    data: [first.positive_count, first.neutral_count, first.negative_count],
+                    backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                    borderColor: '#667eea',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Последний период',
+                    data: [last.positive_count, last.neutral_count, last.negative_count],
+                    backgroundColor: 'rgba(76, 175, 80, 0.7)',
+                    borderColor: '#4CAF50',
+                    borderWidth: 1
+                }
+            ];
+            comparisonCharts.sentiment.update();
+            
+            // Обновление списка изменений тональности
+            updateSentimentChanges(first, last);
+            
+            // Данные для графика трендов (если есть дополнительные данные)
+            if (comparisonData.comparison_data && comparisonData.comparison_data.aspect_trends) {
+                updateTrendsChart(comparisonData.comparison_data.aspect_trends);
+            }
+        }
+        
+        // Обновление списка изменений тональности
+        function updateSentimentChanges(first, last) {
+            const changesList = document.getElementById('sentimentChangeList');
+            
+            const changes = [
+                {
+                    type: 'positive',
+                    label: 'Позитивные отзывы',
+                    first: first.positive_count,
+                    last: last.positive_count,
+                    change: last.positive_count - first.positive_count,
+                    percent: first.positive_count > 0 ? 
+                        ((last.positive_count - first.positive_count) / first.positive_count * 100).toFixed(1) : 0
+                },
+                {
+                    type: 'negative',
+                    label: 'Негативные отзывы',
+                    first: first.negative_count,
+                    last: last.negative_count,
+                    change: last.negative_count - first.negative_count,
+                    percent: first.negative_count > 0 ? 
+                        ((last.negative_count - first.negative_count) / first.negative_count * 100).toFixed(1) : 0
+                },
+                {
+                    type: 'neutral',
+                    label: 'Нейтральные отзывы',
+                    first: first.neutral_count,
+                    last: last.neutral_count,
+                    change: last.neutral_count - first.neutral_count,
+                    percent: first.neutral_count > 0 ? 
+                        ((last.neutral_count - first.neutral_count) / first.neutral_count * 100).toFixed(1) : 0
+                }
+            ];
+            
+            changesList.innerHTML = changes.map(change => `
+                <div class="sentiment-change-item">
+                    <div class="change-label">
+                        <span class="sentiment-dot ${change.type}"></span>
+                        <span>${change.label}</span>
+                    </div>
+                    <div class="change-values">
+                        <span class="change-value">${change.first} → ${change.last}</span>
+                        <span class="change-percent ${change.change >= 0 ? 'positive' : 'negative'}">
+                            ${change.change >= 0 ? '+' : ''}${change.change} (${change.percent}%)
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Обновление графика трендов
+        function updateTrendsChart(aspectTrends) {
+            if (!aspectTrends || !Array.isArray(aspectTrends)) return;
+            
+            // Берем топ-5 аспектов по изменению
+            const topTrends = aspectTrends
+                .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+                .slice(0, 5);
+            
+            comparisonCharts.trends.data.labels = topTrends.map(t => t.aspect);
+            comparisonCharts.trends.data.datasets = [{
+                label: 'Изменение упоминаний (%)',
+                data: topTrends.map(t => t.change_percent || 0),
+                backgroundColor: topTrends.map(t => t.change >= 0 ? 'rgba(76, 175, 80, 0.7)' : 'rgba(244, 67, 54, 0.7)'),
+                borderColor: topTrends.map(t => t.change >= 0 ? '#4CAF50' : '#F44336'),
+                borderWidth: 1
+            }];
+            comparisonCharts.trends.update();
+        }
+        
+        // Обновление детального сравнения
+        function updateDetailedComparison() {
+            updateAspectsTable();
+            updateMetricsTable();
+            
+            // Обновление заголовков периодов
+            if (comparisonData.analyses && comparisonData.analyses.length >= 2) {
+                const firstPeriod = comparisonData.analyses[0];
+                const lastPeriod = comparisonData.analyses[comparisonData.analyses.length - 1];
+                
+                document.getElementById('firstPeriodHeader').textContent = 
+                    `Период 1 (${formatDate(firstPeriod.period_start)})`;
+                document.getElementById('lastPeriodHeader').textContent = 
+                    `Период ${comparisonData.analyses.length} (${formatDate(lastPeriod.period_end)})`;
+                
+                document.getElementById('metricsFirstPeriod').textContent = 
+                    `Период 1 (${formatDate(firstPeriod.period_start)})`;
+                document.getElementById('metricsLastPeriod').textContent = 
+                    `Период ${comparisonData.analyses.length} (${formatDate(lastPeriod.period_end)})`;
+            }
+        }
+        
+        // Обновление таблицы аспектов
+        function updateAspectsTable() {
+            const tableBody = document.getElementById('aspectsTableBody');
+            
+            if (!comparisonData.comparison_data || !comparisonData.comparison_data.aspect_comparison) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-table-message">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>Данные для сравнения аспектов отсутствуют</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const aspects = comparisonData.comparison_data.aspect_comparison;
+            
+            tableBody.innerHTML = aspects.map(aspect => {
+                const changeClass = aspect.change >= 0 ? 'positive' : 'negative';
+                const trendIcon = aspect.trend === 'improving' ? '↗' : 
+                                aspect.trend === 'declining' ? '↘' : '→';
+                const trendClass = aspect.trend === 'improving' ? 'positive' : 
+                                 aspect.trend === 'declining' ? 'negative' : 'neutral';
+                
+                return `
+                    <tr>
+                        <td class="aspect-name-cell">
+                            <div class="aspect-name">${aspect.aspect_name}</div>
+                            <div class="aspect-category">${getAspectCategoryName(aspect.category)}</div>
+                        </td>
+                        <td class="aspect-period">
+                            <div class="period-value">${aspect.first_period?.mentions || 0}</div>
+                            <div class="period-sentiment ${getSentimentScoreClass(aspect.first_period?.sentiment_score)}">
+                                ${formatSentimentScore(aspect.first_period?.sentiment_score)}
+                            </div>
+                        </td>
+                        <td class="aspect-period">
+                            <div class="period-value">${aspect.last_period?.mentions || 0}</div>
+                            <div class="period-sentiment ${getSentimentScoreClass(aspect.last_period?.sentiment_score)}">
+                                ${formatSentimentScore(aspect.last_period?.sentiment_score)}
+                            </div>
+                        </td>
+                        <td class="aspect-change">
+                            <div class="change-value ${changeClass}">
+                                ${aspect.change >= 0 ? '+' : ''}${aspect.change}
+                            </div>
+                            <div class="change-percent">
+                                ${aspect.change_percent >= 0 ? '+' : ''}${aspect.change_percent.toFixed(1)}%
+                            </div>
+                        </td>
+                        <td class="aspect-trend">
+                            <div class="trend-indicator ${trendClass}">
+                                ${trendIcon}
+                            </div>
+                        </td>
+                        <td class="aspect-insight">
+                            <div class="insight-text">${aspect.insight || 'Без изменений'}</div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Обновление таблицы метрик
+        function updateMetricsTable() {
+            const tableBody = document.getElementById('metricsTableBody');
+            const keyChanges = document.getElementById('keyChanges');
+            
+            if (!comparisonData.analyses || comparisonData.analyses.length < 2) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-table-message">
+                            <i class="fas fa-chart-line"></i>
+                            <p>Недостаточно данных для сравнения метрик</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const analyses = comparisonData.analyses;
+            const first = analyses[0];
+            const last = analyses[analyses.length - 1];
+            
+            const metrics = [
+                {
+                    name: 'Средний рейтинг',
+                    first: first.average_rating,
+                    last: last.average_rating,
+                    change: last.average_rating - first.average_rating,
+                    unit: ''
+                },
+                {
+                    name: 'Всего отзывов',
+                    first: first.total_reviews,
+                    last: last.total_reviews,
+                    change: last.total_reviews - first.total_reviews,
+                    unit: ''
+                },
+                {
+                    name: 'Позитивных отзывов',
+                    first: first.positive_count,
+                    last: last.positive_count,
+                    change: last.positive_count - first.positive_count,
+                    unit: ''
+                },
+                {
+                    name: 'Негативных отзывов',
+                    first: first.negative_count,
+                    last: last.negative_count,
+                    change: last.negative_count - first.negative_count,
+                    unit: ''
+                },
+                {
+                    name: 'Нейтральных отзывов',
+                    first: first.neutral_count,
+                    last: last.neutral_count,
+                    change: last.neutral_count - first.neutral_count,
+                    unit: ''
+                },
+                {
+                    name: 'Процент позитивных',
+                    first: first.total_reviews > 0 ? (first.positive_count / first.total_reviews * 100) : 0,
+                    last: last.total_reviews > 0 ? (last.positive_count / last.total_reviews * 100) : 0,
+                    change: last.total_reviews > 0 ? (last.positive_count / last.total_reviews * 100) : 0 - 
+                           (first.total_reviews > 0 ? (first.positive_count / first.total_reviews * 100) : 0),
+                    unit: '%'
+                }
+            ];
+            
+            tableBody.innerHTML = metrics.map(metric => {
+                const changeClass = metric.change >= 0 ? 'positive' : 'negative';
+                const trend = metric.change > 0 ? '↗ Улучшение' : 
+                            metric.change < 0 ? '↘ Ухудшение' : '→ Без изменений';
+                
+                return `
+                    <tr>
+                        <td class="metric-name">${metric.name}</td>
+                        <td class="metric-value">${formatMetricValue(metric.first)}${metric.unit}</td>
+                        <td class="metric-value">${formatMetricValue(metric.last)}${metric.unit}</td>
+                        <td class="metric-change ${changeClass}">
+                            ${metric.change >= 0 ? '+' : ''}${formatMetricValue(metric.change)}${metric.unit}
+                        </td>
+                        <td class="metric-trend">
+                            ${trend}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Ключевые изменения
+            const significantChanges = metrics.filter(m => Math.abs(m.change) > 0);
+            if (significantChanges.length > 0) {
+                keyChanges.innerHTML = significantChanges
+                    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+                    .slice(0, 3)
+                    .map(metric => `
+                        <div class="key-change-item">
+                            <div class="change-name">${metric.name}</div>
+                            <div class="change-details">
+                                <span class="change-from">${formatMetricValue(metric.first)}${metric.unit}</span>
+                                <i class="fas fa-arrow-right"></i>
+                                <span class="change-to">${formatMetricValue(metric.last)}${metric.unit}</span>
+                            </div>
+                            <div class="change-arrow ${metric.change >= 0 ? 'positive' : 'negative'}">
+                                ${metric.change >= 0 ? '↗' : '↘'}
+                            </div>
+                        </div>
+                    `).join('');
+            } else {
+                keyChanges.innerHTML = `
+                    <div class="empty-changes">
+                        <i class="fas fa-minus-circle"></i>
+                        <p>Значительных изменений не обнаружено</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Обновление AI инсайтов
+        function updateAIInsights() {
+            if (!comparisonData.key_insights) {
+                // Если нет AI инсайтов, показываем заглушку
+                document.getElementById('overallConclusion').innerHTML = `
+                    <p>AI анализ не был выполнен. Нажмите "Перегенерировать" для получения инсайтов.</p>
+                `;
+                return;
+            }
+            
+            const insights = comparisonData.key_insights;
+            
+            // Общий вывод
+            if (insights.overall_conclusion) {
+                document.getElementById('overallConclusion').innerHTML = `
+                    <p>${insights.overall_conclusion}</p>
+                `;
+            }
+            
+            // Улучшения
+            if (insights.improvements && insights.improvements.length > 0) {
+                document.getElementById('improvementsList').innerHTML = `
+                    <ul>${insights.improvements.map(item => `<li>${item}</li>`).join('')}</ul>
+                `;
+            } else {
+                document.getElementById('improvementsList').innerHTML = `
+                    <p class="no-data">Значительных улучшений не обнаружено</p>
+                `;
+            }
+            
+            // Ухудшения
+            if (insights.deteriorations && insights.deteriorations.length > 0) {
+                document.getElementById('deteriorationsList').innerHTML = `
+                    <ul>${insights.deteriorations.map(item => `<li>${item}</li>`).join('')}</ul>
+                `;
+            } else {
+                document.getElementById('deteriorationsList').innerHTML = `
+                    <p class="no-data">Значительных ухудшений не обнаружено</p>
+                `;
+            }
+            
+            // Приоритетные действия
+            if (insights.priority_actions && insights.priority_actions.length > 0) {
+                document.getElementById('priorityActions').innerHTML = `
+                    <ol>${insights.priority_actions.map(item => `<li>${item}</li>`).join('')}</ol>
+                `;
+            } else {
+                document.getElementById('priorityActions').innerHTML = `
+                    <p class="no-data">Рекомендации будут доступны после AI анализа</p>
+                `;
+            }
+            
+            // Обновление анализа трендов (если есть данные)
+            if (insights.trend_analysis) {
+                document.getElementById('overallTrendText').textContent = insights.trend_analysis.overall_trend;
+                document.getElementById('overallTrendBadge').textContent = insights.trend_analysis.trend_label;
+                document.getElementById('overallTrendBadge').className = `trend-badge ${insights.trend_analysis.trend_type}`;
+                
+                if (insights.trend_analysis.risks) {
+                    document.getElementById('risksText').innerHTML = `
+                        <ul>${insights.trend_analysis.risks.map(risk => `<li>${risk}</li>`).join('')}</ul>
+                    `;
+                }
+                
+                if (insights.trend_analysis.recommendations) {
+                    document.getElementById('recommendationsText').innerHTML = `
+                        <ul>${insights.trend_analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>
+                    `;
+                }
+            }
+        }
+        
+        // Продолжение скрипта...
+    </script>
+    
+    <style>
+        /* Стили для страницы сравнения */
+        .comparison-content {
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+        }
+        
+        .report-info h1 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .report-meta {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-outline {
+            padding: 12px 25px;
+            border: 2px solid white;
+            border-radius: 10px;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .selected-analyses {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .selected-analyses h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .analyses-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .timeline-marker {
+            position: relative;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .marker-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #f0f2ff;
+        }
+        
+        .timeline-item.first .marker-dot {
+            background: #4CAF50;
+        }
+        
+        .timeline-item.last .marker-dot {
+            background: #F44336;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: calc(100% + 30px);
+            background: #e0e0e0;
+        }
+        
+        .timeline-item:last-child .timeline-line {
+            display: none;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .timeline-header h4 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        .timeline-date {
+            font-size: 0.9rem;
+            color: #666;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .timeline-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .timeline-stat {
+            text-align: center;
+        }
+        
+        .timeline-stat .stat-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .timeline-stat .stat-value {
+            display: block;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .summary-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .summary-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .summary-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .summary-info {
+            flex: 1;
+        }
+        
+        .summary-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .summary-values {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .summary-change {
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        
+        .summary-change.positive {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .summary-change.negative {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .summary-detail {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .comparison-charts {
+            display: grid;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .chart-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            color: #333;
+        }
+        
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        .chart-wrapper {
+            height: 400px;
+            position: relative;
+        }
+        
+        .sentiment-charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .sentiment-chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        .sentiment-stats-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sentiment-change-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .sentiment-change-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .change-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        
+        .sentiment-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .sentiment-dot.positive {
+            background: #4CAF50;
+        }
+        
+        .sentiment-dot.negative {
+            background: #F44336;
+        }
+        
+        .sentiment-dot.neutral {
+            background: #FFC107;
+        }
+        
+        .change-values {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+        }
+        
+        .change-value {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .change-percent {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .change-percent.positive {
+            color: #4CAF50;
+        }
+        
+        .change-percent.negative {
+            color: #F44336;
+        }
+        
+        .detailed-comparison {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .detailed-comparison h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .tabs-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .detail-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .detail-tab {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .detail-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .detail-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .detail-content {
+            padding: 30px;
+        }
+        
+        .detail-pane {
+            display: none;
+        }
+        
+        .detail-pane.active {
+            display: block;
+        }
+        
+        .aspects-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .aspects-controls {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.95rem;
+            color: #333;
+            min-width: 200px;
+        }
+        
+        .aspects-table-container {
+            overflow-x: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .aspects-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .aspects-table th {
+            padding: 15px;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            text-align: left;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .aspects-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .aspects-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .aspect-name-cell {
+            min-width: 150px;
+        }
+        
+        .aspect-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .aspect-category {
+            font-size: 0.8rem;
+            color: #666;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        
+        .aspect-period {
+            min-width: 100px;
+        }
+        
+        .period-value {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .period-sentiment {
+            font-size: 0.85rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .sentiment-positive {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .sentiment-negative {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .sentiment-neutral {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .aspect-change {
+            min-width: 100px;
+        }
+        
+        .change-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 3px;
+        }
+        
+        .change-value.positive {
+            color: #4CAF50;
+        }
+        
+        .change-value.negative {
+            color: #F44336;
+        }
+        
+        .change-percent {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .aspect-trend {
+            min-width: 80px;
+        }
+        
+        .trend-indicator {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .trend-indicator.positive {
+            color: #4CAF50;
+        }
+        
+        .trend-indicator.negative {
+            color: #F44336;
+        }
+        
+        .trend-indicator.neutral {
+            color: #FFC107;
+        }
+        
+        .aspect-insight {
+            min-width: 200px;
+            max-width: 300px;
+        }
+        
+        .insight-text {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .metrics-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        .metrics-table-container {
+            overflow-x: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        .metrics-table th {
+            padding: 15px;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            text-align: left;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .metrics-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .metric-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .metric-change {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .metric-change.positive {
+            color: #4CAF50;
+        }
+        
+        .metric-change.negative {
+            color: #F44336;
+        }
+        
+        .metric-trend {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .metrics-summary {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .metrics-summary h4 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .key-changes {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .key-change-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #e0e0e0;
+        }
+        
+        .key-change-item .change-arrow.positive {
+            border-left-color: #4CAF50;
+        }
+        
+        .key-change-item .change-arrow.negative {
+            border-left-color: #F44336;
+        }
+        
+        .change-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        
+        .change-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .change-arrow {
+            font-size: 1.5rem;
+        }
+        
+        .change-arrow.positive {
+            color: #4CAF50;
+        }
+        
+        .change-arrow.negative {
+            color: #F44336;
+        }
+        
+        .empty-changes {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+        
+        .empty-changes i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .trends-analysis {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .trends-chart-container {
+            height: 400px;
+            position: relative;
+        }
+        
+        .trends-insights {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .trend-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .trend-badge.improving {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .trend-badge.declining {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .trend-badge.stable {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .ai-insights-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .insights-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .insights-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .insight-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .insight-card.large {
+            grid-column: 1 / -1;
+        }
+        
+        .insight-card .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .insight-card .insight-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .insight-card h4 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        .insight-content {
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .insight-content ul, .insight-content ol {
+            padding-left: 20px;
+            margin: 0;
+        }
+        
+        .insight-content li {
+            margin-bottom: 10px;
+        }
+        
+        .no-data {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .comparison-history {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+        
+        .history-list.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .history-date {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .history-analyses {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Стили для модальных окон */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .option-group h4 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .format-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .format-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .format-option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .format-option input[type="radio"]:checked + .option-content {
+            color: #667eea;
+        }
+        
+        .option-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .option-icon {
+            font-size: 2rem;
+            color: #667eea;
+        }
+        
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .option-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .include-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .include-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .export-settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .settings-select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        
+        /* Вспомогательные классы */
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-table-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-table-message i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .report-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .report-meta {
+                flex-wrap: wrap;
+            }
+            
+            .sentiment-charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .trends-analysis {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .aspects-controls {
+                flex-direction: column;
+            }
+            
+            .detail-tabs {
+                flex-direction: column;
+            }
+            
+            .export-options {
+                padding: 10px;
+            }
+            
+            .format-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

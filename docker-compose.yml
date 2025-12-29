@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: review_analysis_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: review_analysis
+    ports:
+      - "3306:3306"
+      - "9091:9091"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: review_analysis_backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=review_analysis
+      - DB_PORT=3306
+      - JWT_SECRET=62863f5af28f0b6390c56590b9834e3c92591c3361aac517252b56b87235b666
+    volumes:
+      - ./frontend:/app/frontend
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

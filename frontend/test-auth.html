@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест авторизации</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d4;
+        }
+        
+        button.secondary {
+            background: #6c757d;
+        }
+        
+        button.danger {
+            background: #dc3545;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .user-data {
+            background: #e9f7fe;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Тестирование авторизации ReviewAnalysis</h1>
+    
+    <div class="test-section">
+        <h2>1. Тест сервера</h2>
+        <button onclick="testServer()">Проверить сервер</button>
+        <button onclick="testAPIRoot()">Проверить API</button>
+        <button onclick="checkCORS()">Проверить CORS</button>
+        <div id="server-result" class="result">Результат появится здесь...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Тест авторизации</h2>
+        <p>Тестовые пользователи:</p>
+        <div class="user-data">
+            ID: 123456789 | Имя: Тестовый | Фамилия: Пользователь
+        </div>
+        
+        <button onclick="authUser1()">Войти как User 1</button>
+        <button onclick="authUser2()">Войти как User 2</button>
+        <button onclick="authRandom()">Войти как случайный пользователь</button>
+        <button onclick="testVerify()" class="secondary">Проверить токен</button>
+        
+        <div id="auth-result" class="result">Результат авторизации...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Тест проектов (требует авторизации)</h2>
+        <button onclick="getProjects()">Получить проекты</button>
+        <button onclick="addProject()">Добавить проект</button>
+        <button onclick="testDashboard()">Перейти на дашборд</button>
+        
+        <div id="projects-result" class="result">Результаты проектов...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Информация о сессии</h2>
+        <button onclick="showLocalStorage()">Показать LocalStorage</button>
+        <button onclick="clearLocalStorage()" class="danger">Очистить LocalStorage</button>
+        
+        <div id="session-info" class="result">
+            <div id="token-status">Токен: не найден</div>
+            <div id="user-status">Пользователь: не авторизован</div>
+        </div>
+    </div>
+    
+    <div class="status info" id="status-message">
+        🔄 Готов к тестированию
+    </div>
+
+    <script>
+        // Базовый URL сервера
+        const API_BASE = 'http://localhost:3000/api';
+        
+        // Функция для показа статуса
+        function setStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        // Функция для вывода результата
+        function setResult(elementId, data, title = '') {
+            const element = document.getElementById(elementId);
+            if (typeof data === 'object') {
+                element.innerHTML = (title ? `<strong>${title}</strong><br>` : '') + 
+                    JSON.stringify(data, null, 2);
+            } else {
+                element.innerHTML = (title ? `<strong>${title}</strong><br>` : '') + data;
+            }
+        }
+        
+        // 1. Тесты сервера
+        async function testServer() {
+            setStatus('Проверяю сервер...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/');
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok,
+                    url: response.url
+                };
+                setResult('server-result', result, 'Ответ сервера:');
+                setStatus('✅ Сервер отвечает', 'success');
+            } catch (error) {
+                setResult('server-result', `❌ Ошибка: ${error.message}`, 'Ошибка:');
+                setStatus('❌ Сервер не отвечает', 'error');
+            }
+        }
+        
+        async function testAPIRoot() {
+            setStatus('Проверяю API...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/telegram', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({test: true})
+                });
+                
+                // Даже если ошибка 400/500 - это значит API работает
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: '/api/auth/telegram'
+                };
+                setResult('server-result', result, 'API ответил:');
+                setStatus('✅ API работает', 'success');
+            } catch (error) {
+                setResult('server-result', `❌ Ошибка: ${error.message}`, 'API недоступен:');
+                setStatus('❌ API недоступен', 'error');
+            }
+        }
+        
+        async function checkCORS() {
+            setStatus('Проверяю CORS...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/telegram', {
+                    method: 'OPTIONS'
+                });
+                
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                
+                setResult('server-result', {
+                    status: response.status,
+                    headers: headers
+                }, 'CORS заголовки:');
+                setStatus('✅ CORS настроен', 'success');
+            } catch (error) {
+                setResult('server-result', `Ошибка OPTIONS запроса: ${error.message}`);
+                setStatus('⚠️ CORS не настроен', 'error');
+            }
+        }
+        
+        // 2. Тесты авторизации
+        async function authUser(userData) {
+            setStatus('Отправляю данные авторизации...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/telegram', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                setResult('auth-result', data, 'Ответ авторизации:');
+                
+                if (data.success && data.token) {
+                    // Сохраняем токен
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    setStatus(`✅ Авторизация успешна! Добро пожаловать, ${data.user.telegram_first_name}`, 'success');
+                    updateSessionInfo();
+                } else {
+                    setStatus(`❌ Ошибка авторизации: ${data.message}`, 'error');
+                }
+                
+                return data;
+            } catch (error) {
+                setResult('auth-result', `❌ Ошибка сети: ${error.message}`);
+                setStatus('❌ Ошибка сети при авторизации', 'error');
+                return null;
+            }
+        }
+        
+        function authUser1() {
+            const user1 = {
+                id: 123456789,
+                first_name: "Тестовый",
+                last_name: "Пользователь",
+                username: "test_user",
+                auth_date: Math.floor(Date.now() / 1000),
+                hash: "test_hash_123"
+            };
+            authUser(user1);
+        }
+        
+        function authUser2() {
+            const user2 = {
+                id: 987654321,
+                first_name: "Иван",
+                last_name: "Петров",
+                username: "ivan_petrov",
+                auth_date: Math.floor(Date.now() / 1000),
+                hash: "test_hash_456"
+            };
+            authUser(user2);
+        }
+        
+        function authRandom() {
+            const randomId = Math.floor(Math.random() * 1000000000);
+            const randomUser = {
+                id: randomId,
+                first_name: "User_" + randomId,
+                last_name: "Random",
+                username: "random_" + randomId,
+                auth_date: Math.floor(Date.now() / 1000),
+                hash: "test_hash_" + randomId
+            };
+            authUser(randomUser);
+        }
+        
+        async function testVerify() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setResult('auth-result', '❌ Токен не найден. Сначала авторизуйтесь.');
+                return;
+            }
+            
+            setStatus('Проверяю токен...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/verify', {
+                    headers: {'Authorization': 'Bearer ' + token}
+                });
+                
+                const data = await response.json();
+                setResult('auth-result', data, 'Верификация токена:');
+                
+                if (data.success) {
+                    setStatus('✅ Токен валиден', 'success');
+                } else {
+                    setStatus('❌ Токен невалиден', 'error');
+                }
+            } catch (error) {
+                setResult('auth-result', `❌ Ошибка: ${error.message}`);
+                setStatus('❌ Ошибка проверки токена', 'error');
+            }
+        }
+        
+        // 3. Тесты проектов
+        async function getProjects() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setResult('projects-result', '❌ Требуется авторизация');
+                return;
+            }
+            
+            setStatus('Загружаю проекты...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/api/projects', {
+                    headers: {'Authorization': 'Bearer ' + token}
+                });
+                
+                const data = await response.json();
+                setResult('projects-result', data, 'Список проектов:');
+                
+                if (data.success) {
+                    setStatus(`✅ Загружено ${data.projects.length} проектов`, 'success');
+                } else {
+                    setStatus(`❌ Ошибка: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                setResult('projects-result', `❌ Ошибка: ${error.message}`);
+                setStatus('❌ Ошибка загрузки проектов', 'error');
+            }
+        }
+        
+        async function addProject() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setResult('projects-result', '❌ Требуется авторизация');
+                return;
+            }
+            
+            const projectData = {
+                marketplace_url: 'https://www.wildberries.ru/catalog/1234567/detail.aspx',
+                product_name: 'Тестовый товар ' + Date.now(),
+                marketplace_type: 'wildberries'
+            };
+            
+            setStatus('Добавляю проект...', 'info');
+            try {
+                const response = await fetch('http://localhost:3000/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(projectData)
+                });
+                
+                const data = await response.json();
+                setResult('projects-result', data, 'Добавление проекта:');
+                
+                if (data.success) {
+                    setStatus(`✅ Проект добавлен! ID: ${data.project.id}`, 'success');
+                } else {
+                    setStatus(`❌ Ошибка: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                setResult('projects-result', `❌ Ошибка: ${error.message}`);
+                setStatus('❌ Ошибка добавления проекта', 'error');
+            }
+        }
+        
+        function testDashboard() {
+            window.open('/dashboard', '_blank');
+        }
+        
+        // 4. Информация о сессии
+        function updateSessionInfo() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            const tokenStatus = document.getElementById('token-status');
+            const userStatus = document.getElementById('user-status');
+            
+            if (token) {
+                tokenStatus.innerHTML = `Токен: <span style="color: green">есть</span> (${token.substring(0, 20)}...)`;
+            } else {
+                tokenStatus.innerHTML = 'Токен: <span style="color: red">не найден</span>';
+            }
+            
+            if (user) {
+                try {
+                    const userObj = JSON.parse(user);
+                    userStatus.innerHTML = `Пользователь: <span style="color: green">${userObj.telegram_first_name} ${userObj.telegram_last_name}</span>`;
+                } catch (e) {
+                    userStatus.innerHTML = 'Пользователь: <span style="color: orange">ошибка парсинга</span>';
+                }
+            } else {
+                userStatus.innerHTML = 'Пользователь: <span style="color: red">не авторизован</span>';
+            }
+        }
+        
+        function showLocalStorage() {
+            const items = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                let value = localStorage.getItem(key);
+                
+                // Пытаемся распарсить JSON
+                try {
+                    value = JSON.parse(value);
+                } catch (e) {
+                    // Оставляем как строку
+                }
+                
+                items[key] = value;
+            }
+            
+            setResult('session-info', items, 'LocalStorage:');
+        }
+        
+        function clearLocalStorage() {
+            if (confirm('Очистить все данные авторизации?')) {
+                localStorage.clear();
+                updateSessionInfo();
+                setStatus('✅ LocalStorage очищен', 'success');
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSessionInfo();
+            setStatus('Готов к тестированию!', 'info');
+            
+            // Авто-проверка сервера
+            setTimeout(testServer, 1000);
+        });
+    </script>
+</body>
+</html>

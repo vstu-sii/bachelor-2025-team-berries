@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviewAnalysis - Анализ отзывов маркетплейсов</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-link:hover {
+            color: #667eea;
+        }
+        
+        .hero-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+            padding: 80px 0;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+        }
+        
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 400px;
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #999;
+            margin: 8px 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .divider span {
+            padding: 0 16px;
+            font-size: 14px;
+        }
+        
+        .test-auth-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #dee2e6;
+            display: none;
+        }
+        
+        .dashboard-preview {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            width: 420px;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .preview-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .preview-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 200px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 6px 6px 0 0;
+            min-height: 20px;
+        }
+        
+        .chart-bar:nth-child(1) { height: 60%; }
+        .chart-bar:nth-child(2) { height: 80%; }
+        .chart-bar:nth-child(3) { height: 40%; }
+        .chart-bar:nth-child(4) { height: 90%; }
+        .chart-bar:nth-child(5) { height: 70%; }
+        
+        .features-section, .pricing-section {
+            padding: 80px 0;
+        }
+        
+        .features-section h2, .pricing-section h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 50px;
+            color: #333;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pricing-card.featured {
+            border: 2px solid #667eea;
+            transform: scale(1.05);
+        }
+        
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+        
+        .pricing-card h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        
+        .pricing-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .pricing-card li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #666;
+        }
+        
+        .pricing-card li:last-child {
+            border-bottom: none;
+        }
+        
+        .pricing-card li::before {
+            content: '✓';
+            margin-right: 12px;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        /* Модальные окна для авторизации */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .auth-modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            animation: modalFade 0.3s ease;
+        }
+        
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .modal-header h2 {
+            font-size: 28px;
+            color: #333;
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group input.error {
+            border-color: #ef4444;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 30px;
+        }
+        
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            color: #666;
+        }
+        
+        .form-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 400px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .notification.error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .notification.success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .notification button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            margin-left: 16px;
+        }
+        
+        .notification button:hover {
+            color: #666;
+        }
+        
+        footer {
+            background: white;
+            padding: 60px 0 30px;
+            margin-top: 60px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .footer-column p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-column li {
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .footer-column a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-column a:hover {
+            color: #667eea;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #f0f0f0;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                flex-direction: column;
+                text-align: center;
+                padding: 40px 0;
+            }
+            
+            h1 {
+                font-size: 36px;
+            }
+            
+            .hero-subtitle {
+                font-size: 18px;
+            }
+            
+            .dashboard-preview {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .features-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+            
+            .pricing-card.featured:hover {
+                transform: translateY(-10px);
+            }
+            
+            .modal-content {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .modal-header h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo">ReviewAnalysis</a>
+            <nav>
+                <a href="#features" class="nav-link">Возможности</a>
+                <a href="#pricing" class="nav-link">Тарифы</a>
+                <a href="#about" class="nav-link">О нас</a>
+            </nav>
+        </header>
+
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>Анализируйте отзывы о ваших товарах с помощью AI</h1>
+                <p class="hero-subtitle">Автоматический сбор и анализ отзывов с Wildberries. Получайте ключевые инсайты для роста продаж.</p>
+                
+                <div class="auth-buttons">
+                    <button id="loginBtn" class="btn btn-primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        Войти в систему
+                    </button>
+                    
+                    <div class="divider">
+                        <span>или</span>
+                    </div>
+                    
+                    <button id="registerBtn" class="btn btn-secondary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        Зарегистрироваться
+                    </button>
+                </div>
+                
+                <div class="test-auth-section">
+                    <h3>📱 Тестовая авторизация</h3>
+                    <div class="test-user-info">
+                        Теперь используйте форму регистрации и входа
+                    </div>
+                </div>
+                
+                <div id="status" style="margin-top: 20px; padding: 12px; border-radius: 8px; display: none;"></div>
+            </div>
+            
+            <div class="hero-image">
+                <div class="dashboard-preview">
+                    <div class="preview-header">
+                        <span>📊 Анализ отзывов</span>
+                        <span class="preview-badge">+15% рост</span>
+                    </div>
+                    <div class="preview-chart">
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                        <div class="chart-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Модальное окно регистрации -->
+        <div id="registerModal" class="auth-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Регистрация</h2>
+                    <button class="close-modal" onclick="closeModal('registerModal')">×</button>
+                </div>
+                
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regTelegramId">Telegram ID *</label>
+                        <input type="number" id="regTelegramId" name="telegram_id" required 
+                               placeholder="Введите ваш Telegram ID">
+                        <div class="error-message" id="regTelegramIdError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regUsername">Имя пользователя (Username)</label>
+                        <input type="text" id="regUsername" name="username" 
+                               placeholder="@username (необязательно)">
+                        <div class="error-message" id="regUsernameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regFirstName">Имя *</label>
+                        <input type="text" id="regFirstName" name="first_name" required 
+                               placeholder="Ваше имя">
+                        <div class="error-message" id="regFirstNameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regLastName">Фамилия</label>
+                        <input type="text" id="regLastName" name="last_name" 
+                               placeholder="Ваша фамилия (необязательно)">
+                        <div class="error-message" id="regLastNameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regSubscription">Тарифный план *</label>
+                        <select id="regSubscription" name="subscription_tier" required>
+                            <option value="">Выберите тариф</option>
+                            <option value="free" selected>Free (Бесплатный)</option>
+                            <option value="pro">Pro (999 ₽/мес)</option>
+                            <option value="business">Business (2999 ₽/мес)</option>
+                        </select>
+                        <div class="error-message" id="regSubscriptionError"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            Зарегистрироваться
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('registerModal')">
+                            Отмена
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="form-footer">
+                    Уже есть аккаунт? <a href="#" onclick="showLoginModal()">Войти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно входа -->
+        <div id="loginModal" class="auth-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Вход в систему</h2>
+                    <button class="close-modal" onclick="closeModal('loginModal')">×</button>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginTelegramId">Telegram ID *</label>
+                        <input type="number" id="loginTelegramId" name="telegram_id" required 
+                               placeholder="Введите ваш Telegram ID">
+                        <div class="error-message" id="loginTelegramIdError"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            Войти
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('loginModal')">
+                            Отмена
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="form-footer">
+                    Нет аккаунта? <a href="#" onclick="showRegisterModal()">Зарегистрироваться</a>
+                </div>
+            </div>
+        </div>
+
+        <section id="features" class="features-section">
+            <h2>Возможности платформы</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Автоматический парсинг</h3>
+                    <p>Сбор отзывов с маркетплейсов без ручной работы</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-анализ тональности</h3>
+                    <p>Определение настроения отзывов и ключевых аспектов</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Сравнение анализов</h3>
+                    <p>Отслеживание динамики показателей во времени</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Быстрая регистрация</h3>
+                    <p>Простая форма регистрации за 2 минуты</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="pricing-section">
+            <h2>Тарифные планы</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Free</h3>
+                    <div class="price">0 ₽</div>
+                    <ul>
+                        <li>✅ До 10 анализов в день</li>
+                        <li>✅ 3 товара</li>
+                        <li>✅ Базовые графики</li>
+                        <li>❌ AI-инсайты</li>
+                    </ul>
+                </div>
+                <div class="pricing-card featured">
+                    <h3>Pro</h3>
+                    <div class="price">999 ₽/мес</div>
+                    <ul>
+                        <li>✅ До 50 анализов в день</li>
+                        <li>✅ 50 товаров</li>
+                        <li>✅ Расширенные графики</li>
+                        <li>✅ AI-инсайты</li>
+                    </ul>
+                </div>
+                <div class="pricing-card">
+                    <h3>Business</h3>
+                    <div class="price">2999 ₽/мес</div>
+                    <ul>
+                        <li>✅ До 200 анализов в день</li>
+                        <li>✅ 200 товаров</li>
+                        <li>✅ Приоритетная поддержка</li>
+                        <li>✅ Кастомные отчеты</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>ReviewAnalysis</h3>
+                    <p>AI-платформа для анализа отзывов маркетплейсов</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Поддержка</h3>
+                    <ul>
+                        <li><a href="#help">Помощь</a></li>
+                        <li><a href="#contact">Контакты</a></li>
+                        <li><a href="#status">Статус системы</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Маркетплейсы</h3>
+                    <ul>
+                        <li>Wildberries</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 ReviewAnalysis. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Управление модальными окнами
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+            clearFormErrors(modalId);
+        }
+        
+        function showRegisterModal() {
+            closeModal('loginModal');
+            showModal('registerModal');
+        }
+        
+        function showLoginModal() {
+            closeModal('registerModal');
+            showModal('loginModal');
+        }
+        
+        // Закрытие модального окна при клике вне его
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('auth-modal')) {
+                e.target.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                clearFormErrors(e.target.id);
+            }
+        });
+        
+        // Очистка ошибок формы
+        function clearFormErrors(modalId) {
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) {
+                const inputs = form.querySelectorAll('input, select');
+                const errorMessages = form.querySelectorAll('.error-message');
+                
+                inputs.forEach(input => input.classList.remove('error'));
+                errorMessages.forEach(error => {
+                    error.style.display = 'none';
+                    error.textContent = '';
+                });
+                
+                form.reset();
+            }
+        }
+        
+        // Показать ошибку поля
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(fieldId + 'Error');
+            
+            if (field && errorElement) {
+                field.classList.add('error');
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+        
+        // Очистить ошибку поля
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(fieldId + 'Error');
+            
+            if (field && errorElement) {
+                field.classList.remove('error');
+                errorElement.style.display = 'none';
+                errorElement.textContent = '';
+            }
+        }
+        
+        // Функция показа уведомления
+        function showNotification(message, type = 'info') {
+            const oldNotifications = document.querySelectorAll('.notification');
+            oldNotifications.forEach(notif => notif.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Валидация формы регистрации
+        function validateRegisterForm(formData) {
+            let isValid = true;
+            
+            // Валидация Telegram ID
+            const telegramId = parseInt(formData.telegram_id);
+            if (!telegramId || telegramId <= 0) {
+                showFieldError('regTelegramId', 'Введите корректный Telegram ID');
+                isValid = false;
+            } else {
+                clearFieldError('regTelegramId');
+            }
+            
+            // Валидация имени
+            if (!formData.first_name || formData.first_name.trim().length < 2) {
+                showFieldError('regFirstName', 'Введите имя (минимум 2 символа)');
+                isValid = false;
+            } else {
+                clearFieldError('regFirstName');
+            }
+            
+            // Валидация тарифа
+            if (!formData.subscription_tier) {
+                showFieldError('regSubscription', 'Выберите тарифный план');
+                isValid = false;
+            } else {
+                clearFieldError('regSubscription');
+            }
+            
+            // Валидация username (если указан)
+            if (formData.username && !formData.username.startsWith('@')) {
+                showFieldError('regUsername', 'Username должен начинаться с @');
+                isValid = false;
+            } else {
+                clearFieldError('regUsername');
+            }
+            
+            return isValid;
+        }
+        
+        // Валидация формы входа
+        function validateLoginForm(formData) {
+            let isValid = true;
+            
+            const telegramId = parseInt(formData.telegram_id);
+            if (!telegramId || telegramId <= 0) {
+                showFieldError('loginTelegramId', 'Введите корректный Telegram ID');
+                isValid = false;
+            } else {
+                clearFieldError('loginTelegramId');
+            }
+            
+            return isValid;
+        }
+        
+        // Обработка регистрации
+        async function handleRegister(formData) {
+            try {
+                showNotification('🔄 Регистрация...', 'info');
+                
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`✅ Регистрация успешна! Добро пожаловать, ${data.user.telegram_first_name}!`, 'success');
+                    
+                    // Сохраняем данные
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', data.token);
+                    
+                    closeModal('registerModal');
+                    
+                    // Перенаправляем на дашборд через 1 секунду
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showNotification(`❌ Ошибка: ${data.message}`, 'error');
+                    
+                    // Показываем ошибки полей если есть
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach(field => {
+                            showFieldError(`reg${field.charAt(0).toUpperCase() + field.slice(1)}`, data.errors[field]);
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Ошибка регистрации:', error);
+                showNotification(`❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+        
+        // Обработка входа - ИСПРАВЛЕННАЯ ВЕРСИЯ
+        async function handleLogin(formData) {
+            try {
+                showNotification('🔄 Вход в систему...', 'info');
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`✅ Вход выполнен! Добро пожаловать, ${data.user.telegram_first_name}!`, 'success');
+                    
+                    // Сохраняем данные
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', data.token);
+                    
+                    // Закрываем модальное окно
+                    closeModal('loginModal');
+                    
+                    // Перенаправляем на дашборд через 1 секунду
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/dashboard';
+                    }, 1000);
+                } else {
+                    showNotification(`❌ Ошибка: ${data.message}`, 'error');
+                    
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach(field => {
+                            showFieldError(`login${field.charAt(0).toUpperCase() + field.slice(1)}`, data.errors[field]);
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                showNotification(`❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+        
+        // Обработчики форм
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                telegram_id: e.target.telegram_id.value,
+                username: e.target.username.value || '',
+                first_name: e.target.first_name.value,
+                last_name: e.target.last_name.value || '',
+                subscription_tier: e.target.subscription_tier.value
+            };
+            
+            if (validateRegisterForm(formData)) {
+                await handleRegister(formData);
+            }
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                telegram_id: e.target.telegram_id.value
+            };
+            
+            if (validateLoginForm(formData)) {
+                await handleLogin(formData);
+            }
+        });
+        
+        // Обработчики кнопок
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            showModal('registerModal');
+        });
+        
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            showModal('loginModal');
+        });
+        
+        // Проверка существующей авторизации
+        function checkExistingAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const statusDiv = document.getElementById('status');
+                        const userData = JSON.parse(user);
+                        statusDiv.innerHTML = `
+                            <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px;">
+                                ✅ Вы авторизованы как ${userData.telegram_first_name}
+                                <br>
+                                <a href="/dashboard" style="color: #155724; font-weight: bold;">Перейти в личный кабинет →</a>
+                                <button onclick="handleLogout()" style="margin-left: 20px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Выйти</button>
+                            </div>
+                        `;
+                        statusDiv.style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                });
+            }
+        }
+        
+        // Выход из системы
+        async function handleLogout() {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка выхода:', error);
+            } finally {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/?logout=true';
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            checkExistingAuth();
+            
+            // Обработка параметров URL
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('logout') === 'true') {
+                showNotification('✅ Вы успешно вышли из системы', 'success');
+            }
+            
+            if (urlParams.get('error')) {
+                showNotification(`Ошибка: ${urlParams.get('error')}`, 'error');
+            }
+            
+            // Автофокус на первое поле при открытии модалки
+            const modals = document.querySelectorAll('.auth-modal');
+            modals.forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal(modal.id);
+                    }
+                });
+            });
+            
+            // Закрытие по ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const activeModal = document.querySelector('.auth-modal.active');
+                    if (activeModal) {
+                        closeModal(activeModal.id);
+                    }
+                }
+            });
+            
+            // Автофокус на поле ввода при открытии модального окна
+            document.getElementById('registerBtn').addEventListener('click', () => {
+                setTimeout(() => {
+                    document.getElementById('regTelegramId')?.focus();
+                }, 100);
+            });
+            
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                setTimeout(() => {
+                    document.getElementById('loginTelegramId')?.focus();
+                }, 100);
+            });
+        });
+        
+        // Дебаг информация
+        console.log('ReviewAnalysis v1.1 - Форма регистрации и входа');
+        console.log('API endpoints: /api/auth/register, /api/auth/login');
+        console.log('При успешном входе происходит автоматическое перенаправление на /dashboard');
+    </script>
+</body>
+</html>

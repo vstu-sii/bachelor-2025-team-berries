@@ -1,0 +1,235 @@
+version: "3.8"
+
+services:
+  # Существующие сервисы
+  mysql:
+    image: mysql:8
+    container_name: review_analysis_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: review_analysis
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/database.sql
+    restart: always
+    networks:
+      - app-network
+      - monitoring-network
+
+  backend:
+    build: ./backend
+    container_name: review_analysis_backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=review_analysis
+      - DB_PORT=3306
+      - JWT_SECRET=62863f5af28f0b6390c56590b9834e3c92591c3361aac517252b56b87235b666
+      - PROMETHEUS_METRICS_PORT=9091
+      - AI_SERVICE_URL=http://ai_service:8000
+    volumes:
+      - ./frontend:/app/frontend
+    restart: unless-stopped
+    networks:
+      - app-network
+      - monitoring-network
+    labels:
+      - "logging=promtail"
+
+  # ============ МОНИТОРИНГ ============
+
+  # Prometheus для метрик
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - monitoring-network
+
+  # Node Exporter для метрик хоста
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    networks:
+      - monitoring-network
+
+  # Grafana для дашбордов
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring-network
+
+  # cAdvisor для мониторинга контейнеров
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+    networks:
+      - monitoring-network
+
+  # Loki для логов
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3101:3100"
+    command: 
+      - -config.file=/etc/loki/local-config.yaml
+      - -validation.allow-structured-metadata=false
+    volumes:
+      - ./monitoring/loki/local-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/tmp/loki
+    restart: unless-stopped
+    networks:
+      - monitoring-network
+
+  # Promtail для сбора логов
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./monitoring/promtail/config.yaml:/etc/promtail/config.yaml
+    command: 
+      - -config.file=/etc/promtail/config.yaml
+    restart: unless-stopped
+    depends_on:
+      - loki
+    networks:
+      - monitoring-network
+
+  # Alertmanager для алертов
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
+    networks:
+      - monitoring-network
+
+  # AI сервис для анализа отзывов
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-j9f8kGfRCUor4VRD1vgaCclDW5oeKbnS}
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  # Healthchecks.io (опционально)
+  healthchecks:
+    image: linuxserver/healthchecks:latest
+    container_name: healthchecks
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - SITE_ROOT=http://localhost:8000
+      - SITE_NAME=Review Analysis Health
+      - DEFAULT_FROM_EMAIL=noreply@localhost
+      - EMAIL_HOST=smtp.example.com
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER=user
+      - EMAIL_HOST_PASSWORD=pass
+      - EMAIL_USE_TLS=True
+      - SUPERUSER_EMAIL=admin@localhost
+      - SUPERUSER_PASSWORD=admin
+    volumes:
+      - healthchecks_data:/config
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - monitoring-network
+
+# УДАЛИ ЭТУ СЕКЦИЮ (строчки 220-225):
+# networks:
+#   monitoring_network:
+#     external: true
+# 
+#   # Healthchecks.io (опционально)
+#   healthchecks:
+
+# ОСТАВЬ ЭТУ СЕКЦИЮ (последняя в файле):
+networks:
+  app-network:
+    driver: bridge
+  monitoring-network:
+    driver: bridge
+  monitoring_network:
+    external: true
+
+volumes:
+  mysql_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  alertmanager_data:
+  healthchecks_data:
