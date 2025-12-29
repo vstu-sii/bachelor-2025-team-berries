@@ -142,14 +142,13 @@ AI Review Analyzer — интеллектуальная система для а
 
 # 5. Технологический стек
 
-**Frontend:** React/Node.js
+**Frontend:** Node.js
 
-**Backend:** Python/FastAPI + Celery + Redis
+**Backend:** Node.js + Express + Celery + Redis
 
 **Database:** MySQL + Redis (кеширование)
 
 **Интеграции:**
-- Telegram Widget для аутентификации
 - LLM API (анализ тональности,классификация аспектов,генерация рекомендаций по улучшению)
 
 # 6. Архитектурные принципы
