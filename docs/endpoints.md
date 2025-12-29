@@ -197,15 +197,6 @@ Content-Type: application/json
 Описание: Сохраняет настройки пользователя
 ```
 
-### 🏢 Настройки компании
-```http
-GET /company/settings
-Описание: Настройки компании и интеграций
-
-POST /company/update
-Content-Type: application/json
-Описание: Обновляет настройки компании
-```
 
 ### 📦 Управление товарами
 ```http
